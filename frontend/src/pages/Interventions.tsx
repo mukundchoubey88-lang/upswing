@@ -1,312 +1,305 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Target, Plus, Calendar, Clock, CheckCircle2, Circle, Trash2, X } from 'lucide-react'
-import MainLayout from '../layouts/MainLayout'
-import studentService from '../services/studentService'
 import { useInterventionsStore, Intervention } from '../store/interventionsStore'
-import RiskBadge from '../components/common/RiskBadge'
+import { studentService } from '../services/studentService'
+import { StudentRecord } from '../data/students'
 import StatCard from '../components/common/StatCard'
+import RiskBadge from '../components/common/RiskBadge'
 import EmptyState from '../components/common/EmptyState'
 
 const Interventions: React.FC = () => {
-  const { interventions, addIntervention, updateStatus, removeIntervention } = useInterventionsStore()
-  const students = studentService.getStudents()
+  const { interventions, addIntervention, updateStatus, deleteIntervention, initializeInterventions } = useInterventionsStore()
+  const [students, setStudents] = useState<StudentRecord[]>([])
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const [priorityFilter, setPriorityFilter] = useState('All')
+  const [showModal, setShowModal] = useState(false)
   
-  const [showForm, setShowForm] = useState(false)
-  const [statusFilter, setStatusFilter] = useState<string>('')
-  const [priorityFilter, setPriorityFilter] = useState<string>('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [formData, setFormData] = useState({
-    studentId: '',
-    type: 'Academic Mentoring' as Intervention['type'],
-    notes: '',
-    dueDate: '',
-    priority: 'Medium' as Intervention['priority'],
-    assignedTo: 'Admin',
-  })
+  // Form fields
+  const [formStudentId, setFormStudentId] = useState<string>('')
+  const [formType, setFormType] = useState<string>('Attendance Counseling')
+  const [formNotes, setFormNotes] = useState<string>('')
+  const [formDueDate, setFormDueDate] = useState<string>('')
+  const [formPriority, setFormPriority] = useState<string>('High')
+  const [formAssignedTo, setFormAssignedTo] = useState<string>('Admin')
+
+  useEffect(() => { initializeInterventions() }, [])
+  useEffect(() => { setStudents(studentService.getStudents()) }, [])
+
+  const priorityOrder: Record<string, number> = { High: 0, Medium: 1, Low: 2 }
+
+  const filtered = interventions
+    .filter(iv => {
+      const matchSearch = iv.studentName.toLowerCase().includes(search.toLowerCase())
+      const matchStatus = statusFilter === 'All' || iv.status === statusFilter
+      const matchPriority = priorityFilter === 'All' || iv.priority === priorityFilter
+      return matchSearch && matchStatus && matchPriority
+    })
+    .sort((a, b) => {
+      const pd = priorityOrder[a.priority] - priorityOrder[b.priority]
+      if (pd !== 0) return pd
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+    })
+
+  const isOverdue = (iv: Intervention) =>
+    iv.status !== 'Completed' && new Date(iv.dueDate) < new Date(new Date().toDateString())
+
+  const riskBg: Record<string, string> = { High: 'bg-red-500', Medium: 'bg-amber-500', Low: 'bg-green-500' }
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+  }
 
   // Stats
   const totalInterventions = interventions.length
-  const plannedCount = interventions.filter(i => i.status === 'Planned').length
-  const inProgressCount = interventions.filter(i => i.status === 'In Progress').length
-  const completedCount = interventions.filter(i => i.status === 'Completed').length
+  const plannedCount = interventions.filter(iv => iv.status === 'Planned').length
+  const inProgressCount = interventions.filter(iv => iv.status === 'In Progress').length
+  const completedCount = interventions.filter(iv => iv.status === 'Completed').length
 
-  // Filter interventions
-  const filteredInterventions = interventions.filter(i => {
-    if (statusFilter && i.status !== statusFilter) return false
-    if (priorityFilter && i.priority !== priorityFilter) return false
-    if (searchQuery && !i.studentName.toLowerCase().includes(searchQuery.toLowerCase())) return false
-    return true
-  })
-
-  // Sort by priority and due date
-  const sortedInterventions = [...filteredInterventions].sort((a, b) => {
-    const priorityOrder = { High: 0, Medium: 1, Low: 2 }
-    if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-      return priorityOrder[a.priority] - priorityOrder[b.priority]
+  const handleCreateIntervention = () => {
+    if (!formStudentId || !formType || !formDueDate || !formPriority || !formAssignedTo) {
+      alert('Please fill in all required fields')
+      return
     }
-    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
-  })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const student = students.find(s => s.id === parseInt(formData.studentId))
+    const student = students.find(s => s.id.toString() === formStudentId)
     if (!student) return
 
     addIntervention({
       studentId: student.id,
       studentName: student.name,
-      type: formData.type,
-      notes: formData.notes,
-      dueDate: formData.dueDate,
-      priority: formData.priority,
-      assignedTo: formData.assignedTo,
+      type: formType as Intervention['type'],
+      notes: formNotes,
       status: 'Planned',
+      priority: formPriority as Intervention['priority'],
+      assignedTo: formAssignedTo,
+      dueDate: formDueDate,
     })
 
-    setFormData({
-      studentId: '',
-      type: 'Academic Mentoring',
-      notes: '',
-      dueDate: '',
-      priority: 'Medium',
-      assignedTo: 'Admin',
-    })
-    setShowForm(false)
+    // Reset form and close modal
+    setFormStudentId('')
+    setFormType('Attendance Counseling')
+    setFormNotes('')
+    setFormDueDate('')
+    setFormPriority('High')
+    setFormAssignedTo('Admin')
+    setShowModal(false)
   }
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-      case 'Medium':
-        return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-      default:
-        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-    }
-  }
-
-  const getStudentRisk = (studentId: number) => {
-    const student = students.find(s => s.id === studentId)
-    return student?.riskLevel || 'Low'
-  }
-
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-  }
-
-  const getRiskBgColor = (level: string) => {
-    switch (level) {
-      case 'High': return 'bg-red-100 dark:bg-red-900/30'
-      case 'Medium': return 'bg-amber-100 dark:bg-amber-900/30'
-      default: return 'bg-green-100 dark:bg-green-900/30'
-    }
-  }
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-  }
-
-  const isOverdue = (dateStr: string, status: string) => {
-    if (status === 'Completed') return false
-    return new Date(dateStr) < new Date()
+  const closeModal = () => {
+    setShowModal(false)
+    setFormStudentId('')
+    setFormType('Attendance Counseling')
+    setFormNotes('')
+    setFormDueDate('')
+    setFormPriority('High')
+    setFormAssignedTo('Admin')
   }
 
   return (
-    <MainLayout>
-      <div className="space-y-5 page-enter">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-50">
-              Interventions
-            </h1>
-            <p className="text-neutral-500 dark:text-neutral-400 mt-2">
-              Create and track student interventions
-            </p>
-          </div>
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium text-sm rounded-lg transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Create Intervention
-          </button>
+    <div className="page-bg">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">Interventions</h1>
+          <p className="text-neutral-500 dark:text-neutral-400 mt-1">Create and track student interventions</p>
         </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard
-            title="Total Interventions"
-            value={totalInterventions}
-            icon={Target}
-            color="blue"
-          />
-          <StatCard
-            title="Planned"
-            value={plannedCount}
-            icon={Clock}
-            color="amber"
-          />
-          <StatCard
-            title="In Progress"
-            value={inProgressCount}
-            icon={Circle}
-            color="blue"
-          />
-          <StatCard
-            title="Completed"
-            value={completedCount}
-            icon={CheckCircle2}
-            color="green"
-          />
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white dark:bg-neutral-800 rounded-card shadow-card border border-neutral-200/60 dark:border-neutral-700/60 p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by student name..."
-              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
-            >
-              <option value="">All Statuses</option>
-              <option value="Planned">Planned</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-            </select>
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
-            >
-              <option value="">All Priorities</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Interventions List */}
-        <div className="space-y-3">
-          {sortedInterventions.length === 0 ? (
-            <EmptyState
-              icon={Target}
-              title="No interventions found"
-              description="Create your first intervention or adjust filters."
-            />
-          ) : (
-            sortedInterventions.map((intervention) => {
-              const studentRisk = getStudentRisk(intervention.studentId)
-              const overdue = isOverdue(intervention.dueDate, intervention.status)
-
-              return (
-                <div
-                  key={intervention.id}
-                  className={`bg-white dark:bg-neutral-800 rounded-card shadow-card border ${
-                    overdue ? 'border-red-300 dark:border-red-800' : 'border-neutral-200/60 dark:border-neutral-700/60'
-                  } p-4 hover:shadow-card-hover transition-shadow`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold ${getRiskBgColor(studentRisk)}`}>
-                        {getInitials(intervention.studentName)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-semibold text-neutral-900 dark:text-neutral-100">{intervention.studentName}</p>
-                          <span className="text-xs text-neutral-500 dark:text-neutral-400">Risk:</span>
-                          <RiskBadge level={studentRisk} size="sm" />
-                          <span className="text-xs text-neutral-500 dark:text-neutral-400">Priority:</span>
-                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getPriorityColor(intervention.priority)}`}>
-                            {intervention.priority}
-                          </span>
-                        </div>
-                        <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                          <span className="font-medium text-primary-600 dark:text-primary-400">{intervention.type}</span>
-                          {intervention.notes && ` - ${intervention.notes}`}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(intervention.dueDate)}
-                            {overdue && <span className="text-red-500 font-medium ml-1">(Overdue)</span>}
-                          </span>
-                          <span>Assigned to: {intervention.assignedTo}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={intervention.status}
-                        onChange={(e) => updateStatus(intervention.id, e.target.value as Intervention['status'])}
-                        className={`text-xs font-medium px-2 py-1 rounded-lg border ${
-                          intervention.status === 'Completed'
-                            ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800'
-                            : intervention.status === 'In Progress'
-                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800'
-                            : 'bg-neutral-50 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-neutral-600'
-                        }`}
-                      >
-                        <option value="Planned">Planned</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Completed">Completed</option>
-                      </select>
-                      <button
-                        onClick={() => removeIntervention(intervention.id)}
-                        className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )
-            })
-          )}
-        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Create Intervention
+        </button>
       </div>
 
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard title="Total Interventions" value={totalInterventions} icon={Target} color="blue" />
+        <StatCard title="Planned" value={plannedCount} icon={Clock} color="amber" />
+        <StatCard title="In Progress" value={inProgressCount} icon={Circle} color="blue" />
+        <StatCard title="Completed" value={completedCount} icon={CheckCircle2} color="green" />
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        <input
+          type="text"
+          placeholder="Search by student name..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 min-w-[200px] border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="appearance-none border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="All">All Status</option>
+          <option value="Planned">Planned</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Completed">Completed</option>
+        </select>
+        <select
+          value={priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value)}
+          className="appearance-none border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="All">All Priority</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </div>
+
+      {/* Interventions List */}
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={Target}
+          title="No interventions found"
+          description="Try adjusting your filters or create a new intervention"
+        />
+      ) : (
+        <div className="space-y-4">
+          {filtered.map((iv) => {
+            const studentRisk = students.find(s => s.id === iv.studentId)?.riskLevel ?? 'Low'
+            const initials = iv.studentName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+
+            const priorityColors: Record<string, string> = {
+              High: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800',
+              Medium: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
+              Low: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800',
+            }
+
+            return (
+              <div
+                key={iv.id}
+                className="bg-white dark:bg-neutral-800 rounded-card shadow-card border border-neutral-200/60 dark:border-neutral-700/60 p-4"
+              >
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                  {/* Left side - Avatar and info */}
+                  <div className="flex items-start gap-3 flex-1">
+                    {/* Avatar */}
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ${riskBg[studentRisk]}`}
+                    >
+                      {initials}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span className="font-semibold text-neutral-900 dark:text-neutral-50">
+                          {iv.studentName}
+                        </span>
+                        <span className="text-neutral-500 text-xs">Risk:</span>
+                        <RiskBadge level={studentRisk} size="sm" />
+                        <span className="text-neutral-500 text-xs">Priority:</span>
+                        <span
+                          className={`inline-flex items-center font-semibold rounded-full border text-xs px-2 py-0.5 ${priorityColors[iv.priority]}`}
+                        >
+                          {iv.priority}
+                        </span>
+                      </div>
+
+                      <p className="text-neutral-500 text-sm">{iv.type}</p>
+
+                      {iv.notes && (
+                        <p className="text-neutral-600 dark:text-neutral-400 text-sm italic truncate mt-1">
+                          {iv.notes}
+                        </p>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {formatDate(iv.dueDate)}
+                          {isOverdue(iv) && (
+                            <span className="text-red-600 dark:text-red-400 font-medium ml-1">(Overdue)</span>
+                          )}
+                        </span>
+                        <span>
+                          <span className="text-neutral-500 text-xs">Assigned to:</span>{' '}
+                          <span className="text-neutral-700 dark:text-neutral-300">{iv.assignedTo}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right side - Status and Delete */}
+                  <div className="flex items-center gap-3 lg:flex-shrink-0">
+                    <select
+                      value={iv.status}
+                      onChange={(e) => updateStatus(iv.id, e.target.value as Intervention['status'])}
+                      className="appearance-none border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Planned">Planned</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+
+                    <button
+                      onClick={() => deleteIntervention(iv.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
       {/* Create Intervention Modal */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowForm(false)} />
-          <div className="relative bg-white dark:bg-neutral-800 rounded-card shadow-xl max-w-md w-full p-6 z-10">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Create Intervention</h2>
-              <button onClick={() => setShowForm(false)} className="text-neutral-400 hover:text-neutral-600">
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-neutral-800 rounded-card shadow-xl w-full max-w-lg">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+                Create Intervention
+              </h2>
+              <button
+                onClick={closeModal}
+                className="p-1 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 rounded"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* Modal Body */}
+            <div className="p-4 space-y-4">
+              {/* Student */}
               <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Student</label>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                  Student <span className="text-red-500">*</span>
+                </label>
                 <select
-                  value={formData.studentId}
-                  onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                  required
-                  className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
+                  value={formStudentId}
+                  onChange={(e) => setFormStudentId(e.target.value)}
+                  className="appearance-none w-full border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Select student</option>
-                  {students.map(s => (
-                    <option key={s.id} value={s.id}>{s.name} ({s.rollNumber})</option>
+                  <option value="">Select a student</option>
+                  {students.map((s) => (
+                    <option key={s.id} value={s.id.toString()}>
+                      {s.name} ({s.rollNumber})
+                    </option>
                   ))}
                 </select>
               </div>
+
+              {/* Intervention Type */}
               <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Intervention Type</label>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                  Intervention Type <span className="text-red-500">*</span>
+                </label>
                 <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value as Intervention['type'] })}
-                  className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
+                  value={formType}
+                  onChange={(e) => setFormType(e.target.value)}
+                  className="appearance-none w-full border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="Attendance Counseling">Attendance Counseling</option>
                   <option value="Academic Mentoring">Academic Mentoring</option>
@@ -316,46 +309,59 @@ const Interventions: React.FC = () => {
                   <option value="Other">Other</option>
                 </select>
               </div>
+
+              {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Notes</label>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                  Notes
+                </label>
                 <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  value={formNotes}
+                  onChange={(e) => setFormNotes(e.target.value)}
+                  placeholder="Add notes..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="Add details about the intervention..."
+                  className="w-full border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Due Date</label>
-                  <input
-                    type="date"
-                    value={formData.dueDate}
-                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                    required
-                    className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Priority</label>
-                  <select
-                    value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as Intervention['priority'] })}
-                    className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
-                  >
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-                  </select>
-                </div>
-              </div>
+
+              {/* Due Date */}
               <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Assigned To</label>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                  Due Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={formDueDate}
+                  onChange={(e) => setFormDueDate(e.target.value)}
+                  className="w-full border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Priority */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                  Priority <span className="text-red-500">*</span>
+                </label>
                 <select
-                  value={formData.assignedTo}
-                  onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                  className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  value={formPriority}
+                  onChange={(e) => setFormPriority(e.target.value)}
+                  className="appearance-none w-full border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+
+              {/* Assigned To */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                  Assigned To <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formAssignedTo}
+                  onChange={(e) => setFormAssignedTo(e.target.value)}
+                  className="appearance-none w-full border border-neutral-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="Admin">Admin</option>
                   <option value="Teacher">Teacher</option>
@@ -363,26 +369,27 @@ const Interventions: React.FC = () => {
                   <option value="Counselor">Counselor</option>
                 </select>
               </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-700 dark:text-neutral-300 font-medium text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium text-sm rounded-lg transition-colors"
-                >
-                  Create Intervention
-                </button>
-              </div>
-            </form>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 p-4 border-t border-neutral-200 dark:border-neutral-700">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateIntervention}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              >
+                Create Intervention
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </MainLayout>
+    </div>
   )
 }
 
