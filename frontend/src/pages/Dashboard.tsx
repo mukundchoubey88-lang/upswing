@@ -2,30 +2,13 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ScatterChart,
-  Scatter,
-  Legend,
+  PieChart, Pie, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Cell, Legend,
 } from 'recharts'
 import {
-  Users,
-  AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  BarChart3,
-  Target,
-  UserCheck,
-  Activity,
+  Users, AlertTriangle, AlertCircle, CheckCircle2,
+  BarChart3, Calendar, X as XIcon, Target,
 } from 'lucide-react'
 import MainLayout from '../layouts/MainLayout'
 import { useAuth } from '../context/AuthContext'
@@ -33,7 +16,7 @@ import { dashboardApi } from '../services/api'
 import studentService from '../services/studentService'
 import StatCard from '../components/common/StatCard'
 import RiskBadge from '../components/common/RiskBadge'
-import TrendIcon from '../components/common/TrendIcon'
+import EmptyState from '../components/common/EmptyState'
 import ChartCard from '../components/common/ChartCard'
 
 const Dashboard: React.FC = () => {
@@ -61,32 +44,15 @@ const Dashboard: React.FC = () => {
     { name: 'Declining', value: stats.declining_count, color: '#ef4444' },
   ]
 
-  // Performance by Department
-  const departmentPerformance = () => {
-    const departments = ['CSE', 'AI & ML', 'ECE', 'ISE']
-    return departments.map((dept) => {
-      const deptStudents = students.filter((s) => s.department === dept)
-      const avgPerf =
-        deptStudents.length > 0
-          ? (deptStudents.reduce((sum, s) => sum + s.avgPerformance, 0) / deptStudents.length).toFixed(1)
-          : 0
-      return {
-        department: dept,
-        avgPerformance: Number(avgPerf),
-        count: deptStudents.length,
-      }
-    })
-  }
+  // Department bar chart — two bars: avgPerformance and avgAttendance
+  const departmentData = ['CSE', 'AI & ML', 'ECE', 'ISE'].map((dept) => {
+    const ds = students.filter((s) => s.department === dept)
+    const avgPerf = ds.length > 0 ? Number((ds.reduce((sum, s) => sum + s.avgPerformance, 0) / ds.length).toFixed(1)) : 0
+    const avgAtt = ds.length > 0 ? Number((ds.reduce((sum, s) => sum + s.attendance, 0) / ds.length).toFixed(1)) : 0
+    return { department: dept, avgPerformance: avgPerf, avgAttendance: avgAtt }
+  })
 
-  // Attendance vs Performance Scatter Data
-  const scatterData = students.map((s) => ({
-    name: s.name,
-    attendance: s.attendance,
-    performance: s.avgPerformance,
-    risk: s.riskLevel,
-  }))
-
-  // Top 5 At-Risk Students
+  // Top 5 At-Risk Students (High risk, sorted by lowest attendance)
   const topAtRiskStudents = students
     .filter((s) => s.riskLevel === 'High')
     .sort((a, b) => a.attendance - b.attendance)
@@ -97,14 +63,11 @@ const Dashboard: React.FC = () => {
     (s) => s.riskLevel === 'High' && s.trend === 'Declining'
   )
 
-  const getInitials = (name: string): string => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-  }
+  const getInitials = (name: string): string =>
+    name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+
+  const getTotalFailedSubjects = () =>
+    students.reduce((sum, s) => sum + (s.failedSubjects || 0), 0)
 
   const getRiskColor = (level: string): string => {
     switch (level) {
@@ -120,6 +83,7 @@ const Dashboard: React.FC = () => {
   return (
     <MainLayout>
       <div className="space-y-5 page-enter">
+        {/* Section 1 - Page Header */}
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-50">
             Welcome, {user?.name}
@@ -135,7 +99,7 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* First Row - 4 Stat Cards */}
+        {/* Section 2 - First Row of 4 Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="Total Students"
@@ -150,67 +114,67 @@ const Dashboard: React.FC = () => {
             value={isLoading ? 0 : data?.high_risk_count ?? 0}
             icon={AlertTriangle}
             color="red"
-            trend={`${((stats.high_risk_count / stats.total_students) * 100).toFixed(0)}% of students`}
+            trend={`${stats.total_students > 0 ? ((stats.high_risk_count / stats.total_students) * 100).toFixed(0) : 0}% of students`}
             to="/students?risk_level=High"
           />
           <StatCard
             title="Medium Risk"
             value={isLoading ? 0 : data?.medium_risk_count ?? 0}
-            icon={Activity}
+            icon={AlertCircle}
             color="amber"
-            trend={`${((stats.medium_risk_count / stats.total_students) * 100).toFixed(0)}% of students`}
+            trend={`${stats.total_students > 0 ? ((stats.medium_risk_count / stats.total_students) * 100).toFixed(0) : 0}% of students`}
             to="/students?risk_level=Medium"
           />
           <StatCard
             title="Low Risk"
             value={isLoading ? 0 : data?.low_risk_count ?? 0}
-            icon={UserCheck}
+            icon={CheckCircle2}
             color="green"
-            trend={`${((stats.low_risk_count / stats.total_students) * 100).toFixed(0)}% of students`}
+            trend={`${stats.total_students > 0 ? ((stats.low_risk_count / stats.total_students) * 100).toFixed(0) : 0}% of students`}
             to="/students?risk_level=Low"
           />
         </div>
 
-        {/* Second Row - 4 Stat Cards */}
+        {/* Section 3 - Second Row of 4 Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            title="Improving"
-            value={isLoading ? 0 : data?.improving_count ?? 0}
-            icon={TrendingUp}
-            color="green"
-            trend="Positive trajectory"
-          />
-          <StatCard
-            title="Declining"
-            value={isLoading ? 0 : data?.declining_count ?? 0}
-            icon={TrendingDown}
-            color="red"
-            trend="Needs attention"
+            title="Avg Performance"
+            value={`${isLoading ? 0 : data?.average_performance ?? 0}%`}
+            icon={BarChart3}
+            color="blue"
+            trend="Academic average"
           />
           <StatCard
             title="Avg Attendance"
             value={`${isLoading ? 0 : data?.average_attendance ?? 0}%`}
             icon={Calendar}
-            color="blue"
+            color="green"
             trend="Overall attendance"
           />
           <StatCard
-            title="Avg Performance"
-            value={`${isLoading ? 0 : data?.average_performance ?? 0}%`}
-            icon={BarChart3}
+            title="Failed Subjects"
+            value={getTotalFailedSubjects()}
+            icon={XIcon}
+            color="red"
+            trend="Total across all students"
+          />
+          <StatCard
+            title="Interventions Created"
+            value={stats.active_interventions}
+            icon={Target}
             color="amber"
-            trend="Academic average"
+            trend="Active cases"
           />
         </div>
 
-        {/* Quick Links - 3 Cards */}
+        {/* Section 4 - Quick Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <QuickLink title="View Students" description="Manage and monitor student performance" icon={Users} href="/students" />
           <QuickLink title="Risk Analysis" description="Analyze student academic risk" icon={AlertTriangle} href="/risk-analysis" />
           <QuickLink title="Interventions" description="Create and track interventions" icon={Target} href="/interventions" />
         </div>
 
-        {/* Charts Row 1 - Risk Distribution & Trend Distribution */}
+        {/* Section 5 - 2-column donut chart grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ChartCard title="Risk Distribution" subtitle="Students by risk level" height={280}>
             <ResponsiveContainer width="100%" height="100%">
@@ -261,94 +225,97 @@ const Dashboard: React.FC = () => {
           </ChartCard>
         </div>
 
-        {/* Charts Row 2 - Department Performance & Scatter Plot */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ChartCard title="Avg Performance by Department" subtitle="Department-wise academic performance" height={280}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={departmentPerformance()}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="department" tick={{ fontSize: 12 }} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="avgPerformance" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
+        {/* Section 6 - Full-width Department Performance bar chart */}
+        <ChartCard title="Performance by Department" subtitle="Avg performance and attendance per department" height={280}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={departmentData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="department" tick={{ fontSize: 12 }} />
+              <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="avgPerformance" name="Avg Performance" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="avgAttendance" name="Avg Attendance" fill="#22c55e" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-          <ChartCard title="Attendance vs Performance" subtitle="Correlation analysis by risk level" height={280}>
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" dataKey="attendance" name="Attendance" domain={[40, 100]} tick={{ fontSize: 12 }} />
-                <YAxis type="number" dataKey="performance" name="Performance" domain={[40, 100]} tick={{ fontSize: 12 }} />
-                <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                <Legend />
-                <Scatter name="High Risk" data={scatterData.filter(d => d.risk === 'High')} fill="#ef4444" />
-                <Scatter name="Medium Risk" data={scatterData.filter(d => d.risk === 'Medium')} fill="#f59e0b" />
-                <Scatter name="Low Risk" data={scatterData.filter(d => d.risk === 'Low')} fill="#22c55e" />
-              </ScatterChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
-
-        {/* Top 5 At-Risk Students Table */}
+        {/* Section 7 - Full-width At-Risk Students Table */}
         <div className="bg-white dark:bg-neutral-800 rounded-card shadow-card border border-neutral-200/60 dark:border-neutral-700/60 overflow-hidden">
           <div className="px-5 py-4 border-b border-neutral-200/60 dark:border-neutral-700/60">
             <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-50">Top 5 At-Risk Students</h3>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">Students requiring immediate attention</p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-neutral-50 dark:bg-neutral-900/50">
-                <tr>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Student</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Department</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Attendance</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Avg Performance</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Risk</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Reason</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
-                {topAtRiskStudents.map((student) => (
-                  <tr key={student.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-700/30 transition-colors">
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${getRiskColor(student.riskLevel)}`}>
-                          {getInitials(student.name)}
-                        </div>
-                        <div>
-                          <p className="font-medium text-neutral-900 dark:text-neutral-100">{student.name}</p>
-                          <p className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">{student.rollNumber}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-neutral-600 dark:text-neutral-300">{student.department}</td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-neutral-900 dark:text-neutral-100">{student.attendance}%</span>
-                        <div className="w-16 h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${student.attendance >= 75 ? 'bg-green-500' : student.attendance >= 65 ? 'bg-amber-500' : 'bg-red-500'}`}
-                            style={{ width: `${student.attendance}%` }}
-                          />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 font-semibold text-neutral-900 dark:text-neutral-100">{student.avgPerformance}%</td>
-                    <td className="px-5 py-3">
-                      <RiskBadge level={student.riskLevel} size="sm" />
-                    </td>
-                    <td className="px-5 py-3 text-neutral-500 dark:text-neutral-400 text-xs max-w-xs truncate">{student.remarks}</td>
+          {topAtRiskStudents.length === 0 ? (
+            <EmptyState
+              icon={CheckCircle2}
+              title="No at-risk students"
+              description="All students are currently performing well"
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-neutral-50 dark:bg-neutral-900/50">
+                  <tr>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Student</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Department</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Attendance</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Avg Performance</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Risk</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                  {topAtRiskStudents.map((student) => (
+                    <tr key={student.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-700/30 transition-colors">
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${getRiskColor(student.riskLevel)}`}>
+                            {getInitials(student.name)}
+                          </div>
+                          <div>
+                            <p className="font-medium text-neutral-900 dark:text-neutral-100">{student.name}</p>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">{student.rollNumber}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-neutral-600 dark:text-neutral-300">{student.department}</td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-neutral-900 dark:text-neutral-100">{student.attendance}%</span>
+                          <div className="w-16 h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${student.attendance >= 75 ? 'bg-green-500' : student.attendance >= 65 ? 'bg-amber-500' : 'bg-red-500'}`}
+                              style={{ width: `${student.attendance}%` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 font-semibold text-neutral-900 dark:text-neutral-100">{student.avgPerformance}%</td>
+                      <td className="px-5 py-3">
+                        <RiskBadge level={student.riskLevel} size="sm" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {/* Needs Attention Panel */}
-        {needsAttentionStudents.length > 0 && (
+        {/* Section 8 - Needs Immediate Attention Panel */}
+        {needsAttentionStudents.length === 0 ? (
+          <div className="bg-white dark:bg-neutral-800 rounded-card shadow-card border border-neutral-200/60 dark:border-neutral-700/60 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-50">Needs Immediate Attention</h3>
+            </div>
+            <EmptyState
+              icon={AlertTriangle}
+              title="No urgent cases"
+              description="No students are currently in high-risk declining status"
+            />
+          </div>
+        ) : (
           <div className="bg-gradient-to-r from-red-50 to-amber-50 dark:from-red-900/20 dark:to-amber-900/20 rounded-card border border-red-200 dark:border-red-800 p-5">
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -377,15 +344,14 @@ const Dashboard: React.FC = () => {
                       <span className="text-neutral-500 dark:text-neutral-400">Attendance: </span>
                       <span className="font-semibold text-neutral-900 dark:text-neutral-100">{student.attendance}%</span>
                     </div>
-                    <TrendIcon trend={student.trend} size="sm" />
                   </div>
-                  <Link
-                    to="/interventions"
+                  <button
+                    type="button"
                     className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
                   >
                     <Target className="w-4 h-4" />
                     Create Intervention
-                  </Link>
+                  </button>
                 </div>
               ))}
             </div>
