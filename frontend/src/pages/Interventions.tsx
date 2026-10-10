@@ -8,7 +8,7 @@ import StatCard from '../components/common/StatCard'
 import EmptyState from '../components/common/EmptyState'
 
 const Interventions: React.FC = () => {
-  const { interventions, addIntervention, updateStatus, deleteIntervention } = useInterventionsStore()
+  const { interventions, addIntervention, updateStatus, removeIntervention } = useInterventionsStore()
   const students = studentService.getStudents()
   
   const [showForm, setShowForm] = useState(false)
@@ -260,7 +260,7 @@ const Interventions: React.FC = () => {
                         <option value="Completed">Completed</option>
                       </select>
                       <button
-                        onClick={() => deleteIntervention(intervention.id)}
+                        onClick={() => removeIntervention(intervention.id)}
                         className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                         title="Delete"
                       >

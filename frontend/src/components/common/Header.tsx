@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { Bell, Settings, HelpCircle, LogOut, AlertTriangle, Calendar, Target, Info, Sun, Moon } from 'lucide-react'
 import { UpswingMark } from '../UpswingIntro'
 import UpswingWordmark from '../UpswingWordmark'
-import { useNotificationStore } from '../../store/notificationsStore'
+import { useNotificationStore, AppNotification } from '../../store/notificationsStore'
 import { formatDistanceToNow } from 'date-fns'
 
 const Header: React.FC = () => {
@@ -70,12 +70,14 @@ const Header: React.FC = () => {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'high-risk':
+      case 'risk':
         return <AlertTriangle className="w-4 h-4 text-red-500" />
       case 'attendance':
         return <Calendar className="w-4 h-4 text-amber-500" />
       case 'intervention':
         return <Target className="w-4 h-4 text-blue-500" />
+      case 'performance':
+        return <Info className="w-4 h-4 text-purple-500" />
       default:
         return <Info className="w-4 h-4 text-gray-500" />
     }
@@ -146,7 +148,7 @@ const Header: React.FC = () => {
                       No notifications
                     </div>
                   ) : (
-                    latestNotifications.map((notif) => (
+                    latestNotifications.map((notif: AppNotification) => (
                       <div
                         key={notif.id}
                         className={`px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 cursor-pointer ${

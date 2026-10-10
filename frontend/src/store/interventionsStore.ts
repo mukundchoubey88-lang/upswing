@@ -76,6 +76,7 @@ interface InterventionsState {
   addIntervention: (intervention: Omit<Intervention, 'id' | 'createdAt'>) => void;
   updateIntervention: (id: string, updates: Partial<Intervention>) => void;
   removeIntervention: (id: string) => void;
+  deleteIntervention: (id: string) => void;
   updateStatus: (id: string, status: Intervention['status']) => void;
   getInterventionsByStudent: (studentId: number) => Intervention[];
   initializeInterventions: () => void;
@@ -105,6 +106,12 @@ export const useInterventionsStore = create<InterventionsState>((set, get) => ({
   },
 
   removeIntervention: (id) => {
+    const updated = get().interventions.filter(item => item.id !== id);
+    saveToStorage(updated);
+    set({ interventions: updated });
+  },
+
+  deleteIntervention: (id) => {
     const updated = get().interventions.filter(item => item.id !== id);
     saveToStorage(updated);
     set({ interventions: updated });

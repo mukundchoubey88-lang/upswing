@@ -14,12 +14,12 @@ const Notifications: React.FC = () => {
   const tabs: { key: TabType; label: string; count?: number }[] = [
     { key: 'all', label: 'All', count: notifications.length },
     { key: 'unread', label: 'Unread', count: unreadCount },
-    { key: 'high-risk', label: 'High Risk', count: notifications.filter(n => n.type === 'high-risk').length },
-    { key: 'attendance', label: 'Attendance', count: notifications.filter(n => n.type === 'attendance').length },
-    { key: 'intervention', label: 'Interventions', count: notifications.filter(n => n.type === 'intervention').length },
+    { key: 'high-risk', label: 'High Risk', count: notifications.filter((n: AppNotification) => n.type === 'high-risk').length },
+    { key: 'attendance', label: 'Attendance', count: notifications.filter((n: AppNotification) => n.type === 'attendance').length },
+    { key: 'intervention', label: 'Interventions', count: notifications.filter((n: AppNotification) => n.type === 'intervention').length },
   ]
 
-  const filteredNotifications = notifications.filter(n => {
+  const filteredNotifications = notifications.filter((n: AppNotification) => {
     switch (activeTab) {
       case 'unread':
         return !n.read
@@ -58,6 +58,8 @@ const Notifications: React.FC = () => {
         return 'bg-amber-50/50 dark:bg-amber-900/20'
       case 'intervention':
         return 'bg-blue-50/50 dark:bg-blue-900/20'
+      case 'performance':
+        return 'bg-purple-50/50 dark:bg-purple-900/20'
       default:
         return 'bg-blue-50/50 dark:bg-blue-900/10'
     }
@@ -123,7 +125,7 @@ const Notifications: React.FC = () => {
               description={activeTab === 'unread' ? "You're all caught up!" : `No ${activeTab === 'all' ? '' : activeTab} notifications.`}
             />
           ) : (
-            filteredNotifications.map((notification) => (
+            filteredNotifications.map((notification: AppNotification) => (
               <div
                 key={notification.id}
                 className={`rounded-card border border-neutral-200/60 dark:border-neutral-700/60 p-4 transition-all hover:shadow-card ${getNotificationBg(notification.type, notification.read)}`}

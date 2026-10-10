@@ -3,7 +3,15 @@ import { create } from 'zustand';
 export interface Settings {
   attendanceThreshold: number;
   performanceThreshold: number;
+  attendanceCutoff: number;
+  performanceCutoff: number;
   notificationsEnabled: boolean;
+  notifications: {
+    highRisk: boolean;
+    attendance: boolean;
+    interventions: boolean;
+    performance: boolean;
+  };
   theme: 'light' | 'dark';
 }
 
@@ -12,7 +20,15 @@ const STORAGE_KEY = 'eduvision_settings';
 const DEFAULT_SETTINGS: Settings = {
   attendanceThreshold: 65,
   performanceThreshold: 65,
+  attendanceCutoff: 65,
+  performanceCutoff: 65,
   notificationsEnabled: true,
+  notifications: {
+    highRisk: true,
+    attendance: true,
+    interventions: true,
+    performance: true,
+  },
   theme: 'light',
 };
 
@@ -42,6 +58,7 @@ const loadFromStorage = (): Settings => {
 interface SettingsState {
   settings: Settings;
   updateSettings: (updates: Partial<Settings>) => void;
+  updateNotificationPreference: (key: keyof Settings['notifications'], value: boolean) => void;
   resetToDefaults: () => void;
 }
 
@@ -51,6 +68,20 @@ export const useSettingsStore = create<SettingsState>(() => ({
   updateSettings: (updates) => {
     useSettingsStore.setState(state => {
       const updated = { ...state.settings, ...updates };
+      saveToStorage(updated);
+      return { settings: updated };
+    });
+  },
+
+  updateNotificationPreference: (key, value) => {
+    useSettingsStore.setState(state => {
+      const updated = {
+        ...state.settings,
+        notifications: {
+          ...state.settings.notifications,
+          [key]: value,
+        },
+      };
       saveToStorage(updated);
       return { settings: updated };
     });

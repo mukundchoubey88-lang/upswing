@@ -5,7 +5,8 @@ export interface AppNotification {
   id: string;
   studentId: number;
   studentName: string;
-  type: 'risk' | 'attendance' | 'performance' | 'intervention';
+  type: 'high-risk' | 'attendance' | 'performance' | 'intervention';
+  title: string;
   message: string;
   priority: 'high' | 'medium' | 'low';
   read: boolean;
@@ -49,7 +50,8 @@ const generateSeedNotifications = (): AppNotification[] => {
       id: `${Date.now() + counter++}-${Math.floor(Math.random() * 10000)}`,
       studentId: s.id,
       studentName: s.name,
-      type: 'risk',
+      type: 'high-risk',
+      title: 'High Risk Alert',
       message: `${s.name} has been flagged as High Risk. Immediate intervention recommended.`,
       priority: 'high',
       read: false,
@@ -63,6 +65,7 @@ const generateSeedNotifications = (): AppNotification[] => {
       studentId: s.id,
       studentName: s.name,
       type: 'performance',
+      title: 'Performance Decline',
       message: `${s.name}'s academic performance is showing a declining trend.`,
       priority: 'medium',
       read: false,
@@ -76,6 +79,7 @@ const generateSeedNotifications = (): AppNotification[] => {
       studentId: s.id,
       studentName: s.name,
       type: 'attendance',
+      title: 'Low Attendance',
       message: `${s.name} has attendance below threshold (${s.attendance}%). Follow-up required.`,
       priority: Number(s.attendance) < 50 ? 'high' : 'medium',
       read: false,
@@ -143,5 +147,8 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
     }
   },
 }));
+
+// Export with both names for compatibility
+export const useNotificationStore = useNotificationsStore;
 
 export default useNotificationsStore;
