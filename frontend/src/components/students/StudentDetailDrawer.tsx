@@ -78,15 +78,13 @@ const StudentDetailDrawer: React.FC<StudentDetailDrawerProps> = ({ student, open
       reasons.push(`Attendance ${student.attendance}%, below 65% threshold`)
     }
     if (student.avgPerformance < 65) {
-      reasons.push(`Avg performance ${student.avgPerformance}%, below 65% threshold`)
+      reasons.push(`Avg Performance ${student.avgPerformance}%, below 65% threshold`)
     }
-    if (student.failedSubjects >= 3) {
-      reasons.push(`${student.failedSubjects} failed subjects`)
-    } else if (student.failedSubjects > 0) {
+    if (student.failedSubjects > 0) {
       reasons.push(`${student.failedSubjects} failed subject${student.failedSubjects > 1 ? 's' : ''}`)
     }
     if (student.trend === 'Declining') {
-      reasons.push('Academic trend is declining')
+      reasons.push('Trend: Declining')
     }
     if (reasons.length === 0) {
       reasons.push('Student is on track')
