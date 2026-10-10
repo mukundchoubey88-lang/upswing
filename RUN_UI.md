@@ -1,4 +1,4 @@
-# 🚀 How to Run EDUVISION AI UI
+# 🚀 How to Run UPSWING UI
 
 ## Quick Start (5 Minutes)
 
@@ -132,7 +132,7 @@ frontend/
 - 📧 Email input
 - 🔒 Password input
 - 🚀 "Sign In" button
-- 🎨 EDUVISION AI branding
+- 🎨 UPSWING branding
 
 ### After Login (with backend)
 - 📊 Dashboard with metrics

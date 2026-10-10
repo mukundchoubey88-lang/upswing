@@ -28,7 +28,7 @@
 ### 1. Login Page (http://localhost:5173/)
 ```
 ┌─────────────────────────────────────┐
-│     🎓 EDUVISION AI                 │
+│     🎓 UPSWING                 │
 │                                     │
 │  Email: ___________________         │
 │  Password: _______________          │
@@ -182,7 +182,7 @@ npm run preview
 
 Even without backend, you can see:
 - 🎯 Clean, modern login UI
-- 🎨 EDUVISION AI branding
+- 🎨 UPSWING branding
 - 📱 Responsive design
 - 🌙 Dark mode ready (Tailwind configured)
 - ✨ Professional styling

@@ -1,4 +1,4 @@
-# EDUVISION AI - Implementation Tasks
+# UPSWING - Implementation Tasks
 
 **Structured breakdown of development tasks from requirements and design documents.**
 

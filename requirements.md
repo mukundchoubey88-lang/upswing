@@ -1,4 +1,4 @@
-# EDUVISION AI - Requirements Document
+# UPSWING - Requirements Document
 
 **"Detect Early. Understand Why. Take Action. Improve Outcomes."**
 
@@ -8,7 +8,7 @@ An AI-powered Student Academic Performance Detection & Early Warning System
 
 ## 1. Executive Summary
 
-EDUVISION AI is an intelligent early warning platform that shifts academic intervention from reactive (discovering failure after it happens) to proactive (identifying risk signals before failure occurs).
+UPSWING is an intelligent early warning platform that shifts academic intervention from reactive (discovering failure after it happens) to proactive (identifying risk signals before failure occurs).
 
 The system addresses a critical gap in educational institutions: the inability to detect struggling students early enough for meaningful intervention.
 
@@ -433,7 +433,7 @@ Intelligent alert system:
 
 ### 7.1 Teacher Morning Check-In
 
-1. Login to EDUVISION AI
+1. Login to UPSWING
 2. View dashboard: "7 students need attention"
 3. Identify high-risk student from Attention Required section
 4. Click to open AI analysis

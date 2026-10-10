@@ -1,4 +1,4 @@
-# EDUVISION AI - Database Documentation
+# UPSWING - Database Documentation
 
 **Complete database schema, relationships, and design rationale.**
 
@@ -22,7 +22,7 @@
 
 ### Architecture
 
-EDUVISION AI uses a **normalized relational database** with 11 tables, designed for:
+UPSWING uses a **normalized relational database** with 11 tables, designed for:
 
 - **Data Integrity**: Foreign keys enforce referential integrity
 - **Query Performance**: Strategic indexes on frequently queried columns
@@ -635,14 +635,14 @@ Database automatically created on first run:
 python -c "from app.database import init_db; init_db()"
 ```
 
-Creates `eduvision.db` file in backend directory.
+Creates `upswing.db` file in backend directory.
 
 ### PostgreSQL (Production)
 
 #### 1. Create Database
 
 ```bash
-createdb eduvision
+createdb upswing
 ```
 
 #### 2. Initialize Schema
@@ -652,7 +652,7 @@ createdb eduvision
 alembic upgrade head
 
 # Or manually
-psql eduvision < schema.sql
+psql upswing < schema.sql
 ```
 
 #### 3. Create Indexes
@@ -667,23 +667,23 @@ All indexes are created automatically when models are initialized.
 
 ```bash
 # Simple file copy
-cp eduvision.db eduvision.backup.db
+cp upswing.db eduvision.backup.db
 
 # Using sqlite3 CLI
-sqlite3 eduvision.db ".dump" > eduvision_dump.sql
+sqlite3 upswing.db ".dump" > upswing_dump.sql
 ```
 
 ### PostgreSQL Backup
 
 ```bash
 # Backup database
-pg_dump eduvision > eduvision_backup.sql
+pg_dump upswing > upswing_backup.sql
 
 # Backup with compression
-pg_dump -Fc eduvision > eduvision_backup.dump
+pg_dump -Fc upswing > upswing_backup.dump
 
 # Restore from backup
-psql eduvision < eduvision_backup.sql
+psql upswing < upswing_backup.sql
 ```
 
 ### Maintenance Commands
@@ -693,7 +693,7 @@ psql eduvision < eduvision_backup.sql
 ANALYZE;
 
 -- Rebuild indexes (PostgreSQL)
-REINDEX DATABASE eduvision;
+REINDEX DATABASE upswing;
 
 -- Vacuum database (PostgreSQL)
 VACUUM ANALYZE;

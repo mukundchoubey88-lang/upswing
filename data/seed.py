@@ -1,5 +1,5 @@
 """
-EDUVISION AI - Demo Data Seeding Script
+UPSWING - Demo Data Seeding Script
 
 Generates realistic demo data with:
 - 250+ students with realistic correlations
@@ -33,7 +33,7 @@ from app.ml import RiskCalculator
 
 
 class DemoDataGenerator:
-    """Generate realistic demo data for EDUVISION AI."""
+    """Generate realistic demo data for UPSWING."""
 
     # Class/semester options
     CLASSES = ["BCA-1", "BCA-2", "BCA-3", "BCA-4", "CSE-1", "CSE-2", "CSE-3", "CSE-4"]
@@ -88,7 +88,7 @@ class DemoDataGenerator:
 
     def generate_all(self):
         """Generate all demo data."""
-        print("🌱 Seeding EDUVISION AI Demo Data...")
+        print("🌱 Seeding UPSWING Demo Data...")
         
         try:
             # Create subjects

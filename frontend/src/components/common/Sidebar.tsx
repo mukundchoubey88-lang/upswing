@@ -1,12 +1,24 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import studentService from '../../services/studentService'
+import {
+  LayoutDashboard,
+  Users,
+  AlertTriangle,
+  Target,
+  Bell,
+  FileText,
+  Database,
+  Settings
+} from 'lucide-react'
 
 interface NavItem {
   path: string
   label: string
-  icon: string
+  icon: React.ReactNode
   roles: string[]
+  badge?: number
   divider?: boolean
 }
 
@@ -15,19 +27,22 @@ const Sidebar: React.FC = () => {
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
 
+  const stats = studentService.getStats()
+  const highRiskCount = stats.high_risk_count
+
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/')
 
   const navItems: NavItem[] = [
-    { path: '/', label: 'Dashboard', icon: '📊', roles: ['admin', 'teacher', 'student'] },
-    { path: '/students', label: 'Students', icon: '👥', roles: ['admin', 'teacher'] },
-    { path: '/risk-analysis', label: 'Risk Analysis', icon: '⚠️', roles: ['admin', 'teacher'] },
-    { path: '/interventions', label: 'Interventions', icon: '🎯', roles: ['admin', 'teacher'] },
-    { divider: true, path: '', label: '', icon: '', roles: [] },
-    { path: '/notifications', label: 'Notifications', icon: '🔔', roles: ['admin', 'teacher', 'student'] },
-    { path: '/reports', label: 'Reports', icon: '📄', roles: ['admin', 'teacher'] },
-    { divider: true, path: '', label: '', icon: '', roles: [] },
-    { path: '/data-center', label: 'Data Center', icon: '💾', roles: ['admin'] },
-    { path: '/settings', label: 'Settings', icon: '⚙️', roles: ['admin'] },
+    { path: '/', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, roles: ['admin', 'teacher', 'student'] },
+    { path: '/students', label: 'Students', icon: <Users className="w-5 h-5" />, roles: ['admin', 'teacher'] },
+    { path: '/risk-analysis', label: 'Risk Analysis', icon: <AlertTriangle className="w-5 h-5" />, roles: ['admin', 'teacher'], badge: highRiskCount },
+    { path: '/interventions', label: 'Interventions', icon: <Target className="w-5 h-5" />, roles: ['admin', 'teacher'] },
+    { divider: true, path: '', label: '', icon: null, roles: [] },
+    { path: '/notifications', label: 'Notifications', icon: <Bell className="w-5 h-5" />, roles: ['admin', 'teacher', 'student'] },
+    { path: '/reports', label: 'Reports', icon: <FileText className="w-5 h-5" />, roles: ['admin', 'teacher'] },
+    { divider: true, path: '', label: '', icon: null, roles: [] },
+    { path: '/data-center', label: 'Data Center', icon: <Database className="w-5 h-5" />, roles: ['admin'] },
+    { path: '/settings', label: 'Settings', icon: <Settings className="w-5 h-5" />, roles: ['admin'] },
   ]
 
   const visibleItems = navItems.filter((item) =>
@@ -39,7 +54,7 @@ const Sidebar: React.FC = () => {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="md:hidden fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary-500 hover:bg-primary-600 text-white rounded-full shadow-lg flex items-center justify-center text-xl transition-transform"
+        className="md:hidden fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-br from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-full shadow-lg flex items-center justify-center text-xl transition-all"
       >
         {isOpen ? '✕' : '☰'}
       </button>
@@ -52,41 +67,52 @@ const Sidebar: React.FC = () => {
       >
         {/* Logo */}
         <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-              E
+          <Link to="/" className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
+              U
             </div>
             <div>
-              <h1 className="text-xl font-bold text-primary-900 dark:text-primary-50">EDUVISION</h1>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">AI Detection</p>
+              <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">UPSWING</h1>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">AI Detection</p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {visibleItems.map((item, idx) => {
             if (item.divider) {
               return (
-                <div key={`divider-${idx}`} className="my-4 border-t border-neutral-200 dark:border-neutral-700" />
+                <div key={`divider-${idx}`} className="my-3 border-t border-neutral-200 dark:border-neutral-700" />
               )
             }
 
+            const active = isActive(item.path)
             return (
               <Link
                 key={item.path}
                 to={item.path}
                 onClick={() => setIsOpen(false)}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                  isActive(item.path)
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-900 dark:text-primary-50 shadow-sm'
-                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
-                }`}
+                className={`
+                  flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all relative
+                  ${active
+                    ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 shadow-sm'
+                    : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 hover:text-neutral-900 dark:hover:text-neutral-200'
+                  }
+                `}
               >
-                <span className="text-lg w-5 text-center">{item.icon}</span>
-                <span>{item.label}</span>
-                {isActive(item.path) && (
-                  <span className="ml-auto w-1 h-1 bg-primary-500 rounded-full"></span>
+                {/* Active accent bar */}
+                {active && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary-500 rounded-r-full" />
+                )}
+                <span className={`${active ? 'text-primary-600 dark:text-primary-400' : ''}`}>
+                  {item.icon}
+                </span>
+                <span className="flex-1">{item.label}</span>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="px-2 py-0.5 text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 rounded-full">
+                    {item.badge}
+                  </span>
                 )}
               </Link>
             )
@@ -95,10 +121,10 @@ const Sidebar: React.FC = () => {
 
         {/* Footer */}
         <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
-          <p className="text-xs text-neutral-600 dark:text-neutral-400 text-center">
-            EDUVISION AI v1.0
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
+            UPSWING v1.0
           </p>
-          <p className="text-xs text-neutral-500 dark:text-neutral-500 text-center mt-1">
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 text-center mt-1">
             Early Warning System
           </p>
         </div>
@@ -107,7 +133,7 @@ const Sidebar: React.FC = () => {
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 md:hidden z-30"
+          className="fixed inset-0 bg-black/50 md:hidden z-30"
           onClick={() => setIsOpen(false)}
         />
       )}

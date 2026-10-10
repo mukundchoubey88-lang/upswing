@@ -1,6 +1,6 @@
-# EDUVISION AI - API Documentation
+# UPSWING - API Documentation
 
-**Complete REST API endpoint documentation for EDUVISION AI.**
+**Complete REST API endpoint documentation for UPSWING.**
 
 ---
 

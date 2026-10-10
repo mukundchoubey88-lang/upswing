@@ -1,5 +1,5 @@
 """
-EDUVISION AI - Main FastAPI Application
+UPSWING - Main FastAPI Application
 Student Academic Performance Detection & Early Warning System
 """
 from fastapi import FastAPI
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifespan events."""
     # Startup
-    logger.info("🚀 Starting EDUVISION AI Backend...")
+    logger.info("🚀 Starting UPSWING Backend...")
     logger.info(f"📊 Database: {settings.DATABASE_URL}")
     
     try:

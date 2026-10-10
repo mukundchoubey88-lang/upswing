@@ -6,7 +6,7 @@ from app.database import Base, generate_uuid
 class Notification(Base):
     __tablename__ = "notifications"
 
-    id = Column(String(36), primary_key=True, default=generate_uuid
+    id = Column(String(36), primary_key=True, default=generate_uuid)
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     student_id = Column(String(36), ForeignKey("students.id", ondelete="CASCADE"), nullable=True)
     type = Column(String(100), nullable=False)

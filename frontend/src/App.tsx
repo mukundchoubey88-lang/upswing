@@ -11,6 +11,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import StudentList from './pages/StudentList'
 import StudentProfile from './pages/StudentProfile'
+import RiskAnalysis from './pages/RiskAnalysis'
 import Interventions from './pages/Interventions'
 import Notifications from './pages/Notifications'
 import Reports from './pages/Reports'
@@ -59,7 +60,7 @@ function App() {
               path="/risk-analysis"
               element={
                 <ProtectedRoute requiredRole="teacher">
-                  <Dashboard />
+                  <RiskAnalysis />
                 </ProtectedRoute>
               }
             />

@@ -1,4 +1,4 @@
-# EDUVISION AI - Development Progress Report
+# UPSWING - Development Progress Report
 
 **Date**: October 4, 2026  
 **Progress**: 8/25 Tasks Completed (32%)  
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-EDUVISION AI project is progressing well with all foundational components completed and tested. The application has a complete specification, working authentication system, realistic demo data for 260+ students, and a fully functional application shell with navigation. The next phase focuses on backend API implementation and dashboard features.
+UPSWING project is progressing well with all foundational components completed and tested. The application has a complete specification, working authentication system, realistic demo data for 260+ students, and a fully functional application shell with navigation. The next phase focuses on backend API implementation and dashboard features.
 
 ---
 
@@ -93,7 +93,7 @@ EDUVISION AI project is progressing well with all foundational components comple
 ## Current Architecture Overview
 
 ```
-EDUVISION AI (32% Complete)
+UPSWING (32% Complete)
 
 Frontend (React + TypeScript)
 ├── Authentication ✅

@@ -1,5 +1,5 @@
-# EDUVISION AI - Backend Startup Script
-Write-Host "🚀 Starting EDUVISION AI Backend..." -ForegroundColor Cyan
+# UPSWING - Backend Startup Script
+Write-Host "🚀 Starting UPSWING Backend..." -ForegroundColor Cyan
 Write-Host ""
 
 # Navigate to backend directory
@@ -27,7 +27,7 @@ if (-Not (Test-Path "venv\Lib\site-packages\fastapi")) {
 }
 
 # Check if database exists
-if (-Not (Test-Path "..\data\eduvision.db")) {
+if (-Not (Test-Path "..\data\upswing.db")) {
     Write-Host "🗄️ Creating database and seeding demo data..." -ForegroundColor Yellow
     python ..\data\seed.py
     Write-Host "✅ Database created with 260 students!" -ForegroundColor Green

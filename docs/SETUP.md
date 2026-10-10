@@ -1,4 +1,4 @@
-# EDUVISION AI - Setup Guide
+# UPSWING - Setup Guide
 
 **Complete installation and configuration guide for development and deployment.**
 
@@ -140,7 +140,7 @@ init_db()
 exit()
 ```
 
-You should see `eduvision.db` created in the backend directory.
+You should see `upswing.db` created in the backend directory.
 
 ### Step 5: Seed Demo Data (Later)
 
@@ -169,7 +169,7 @@ Open browser to: `http://localhost:8000`
 You should see:
 ```json
 {
-  "name": "EDUVISION AI",
+  "name": "UPSWING",
   "version": "1.0.0",
   "api": "/api/v1"
 }
@@ -222,7 +222,7 @@ You should see:
 
 Visit: `http://localhost:5173`
 
-You should see the EDUVISION AI login page.
+You should see the UPSWING login page.
 
 ---
 
@@ -259,9 +259,9 @@ We'll add `start` scripts later for easier startup.
 
 ### SQLite (Development - Default)
 
-No configuration needed. SQLite automatically creates `eduvision.db`.
+No configuration needed. SQLite automatically creates `upswing.db`.
 
-**Location**: `backend/eduvision.db`
+**Location**: `backend/upswing.db`
 
 **Pros**: 
 - No installation required
@@ -289,7 +289,7 @@ For production or multi-user development:
 **On macOS/Linux (Command Line):**
 ```bash
 psql -U postgres
-CREATE DATABASE eduvision;
+CREATE DATABASE upswing;
 \q
 ```
 
@@ -328,12 +328,12 @@ exit()
 
 ```env
 # App Settings
-APP_NAME=EDUVISION AI
+APP_NAME=UPSWING
 APP_VERSION=1.0.0
 DEBUG=True                    # Set to False in production
 
 # Database
-DATABASE_URL=sqlite:///./eduvision.db
+DATABASE_URL=sqlite:///./upswing.db
 
 # Security (⚠️ CHANGE IN PRODUCTION)
 SECRET_KEY=your-super-secret-key-change-in-production
@@ -352,7 +352,7 @@ API_V1_STR=/api/v1
 
 ```env
 VITE_API_URL=http://localhost:8000/api/v1
-VITE_APP_NAME=EDUVISION AI
+VITE_APP_NAME=UPSWING
 ```
 
 ---
@@ -386,7 +386,7 @@ VITE_API_URL=http://localhost:8001/api/v1
 **Solution**: Close other connections and restart:
 ```bash
 # Stop backend server
-# Delete eduvision.db
+# Delete upswing.db
 # Restart server
 ```
 
@@ -427,7 +427,7 @@ python -c "from app.database import init_db; init_db()"
 **Solution**: Delete corrupted database and restart:
 ```bash
 # Backend directory
-rm eduvision.db
+rm upswing.db
 # Restart backend server
 ```
 
@@ -467,8 +467,8 @@ gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
 Or using Docker:
 ```bash
 # Create Dockerfile
-docker build -t eduvision-api .
-docker run -p 8000:8000 eduvision-api
+docker build -t upswing-api .
+docker run -p 8000:8000 upswing-api
 ```
 
 ### 4. Frontend Deployment

@@ -47,7 +47,7 @@ const Login: React.FC = () => {
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-primary-900 dark:text-primary-50 mb-2">
-            EDUVISION
+            UPSWING
           </h1>
           <p className="text-sm text-neutral-600 dark:text-neutral-400">
             AI Academic Performance Detection
@@ -159,7 +159,7 @@ const Login: React.FC = () => {
         {/* Footer */}
         <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700 text-center">
           <p className="text-xs text-neutral-500 dark:text-neutral-500">
-            EDUVISION AI v1.0 • Early Warning System
+            UPSWING v1.0 • Early Warning System
           </p>
         </div>
       </div>

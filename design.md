@@ -1,4 +1,4 @@
-# EDUVISION AI - Design Document
+# UPSWING - Design Document
 
 **System Architecture, Database Design, API Architecture, ML Architecture, UI Architecture**
 
@@ -8,7 +8,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     EDUVISION AI SYSTEM                     │
+│                     UPSWING SYSTEM                     │
 └─────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────┐         ┌──────────────────────┐
@@ -38,7 +38,7 @@
 ## 2. Project Structure
 
 ```
-eduvision-ai/
+upswing/
 │
 ├── frontend/
 │   ├── public/
