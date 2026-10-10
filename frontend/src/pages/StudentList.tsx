@@ -124,7 +124,7 @@ const StudentList: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 page-enter">
+      <div className="space-y-5 page-enter">
         <div>
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-50">
             Students
@@ -169,7 +169,7 @@ const StudentList: React.FC = () => {
                 setDepartment(e.target.value)
                 setPage(1)
               }}
-              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
             >
               <option value="">All Departments</option>
               <option value="CSE">CSE</option>
@@ -184,7 +184,7 @@ const StudentList: React.FC = () => {
                 setYear(e.target.value)
                 setPage(1)
               }}
-              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
             >
               <option value="">All Years</option>
               <option value="2nd Year">2nd Year</option>
@@ -197,7 +197,7 @@ const StudentList: React.FC = () => {
                 setSection(e.target.value)
                 setPage(1)
               }}
-              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
             >
               <option value="">All Sections</option>
               <option value="A">Section A</option>
@@ -211,7 +211,7 @@ const StudentList: React.FC = () => {
                 setRiskLevel(e.target.value)
                 setPage(1)
               }}
-              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
             >
               <option value="">All Risk Levels</option>
               <option value="High">High Risk</option>

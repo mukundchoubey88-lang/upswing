@@ -65,7 +65,7 @@ const Notifications: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 page-enter">
+      <div className="space-y-5 page-enter">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-50">

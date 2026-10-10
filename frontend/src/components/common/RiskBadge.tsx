@@ -15,7 +15,7 @@ const RiskBadge: React.FC<RiskBadgeProps> = ({ level, size = 'md', className = '
 
   const sizeMap = {
     sm: 'px-2 py-0.5 text-xs',
-    md: 'px-2.5 py-1 text-xs',
+    md: 'px-3 py-1 text-sm',
   }
 
   return (

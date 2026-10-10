@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { UpswingMark } from '../UpswingIntro'
+import UpswingWordmark from '../UpswingWordmark'
 import studentService from '../../services/studentService'
 import {
   LayoutDashboard,
@@ -68,12 +70,14 @@ const Sidebar: React.FC = () => {
         {/* Logo */}
         <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
           <Link to="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
-              U
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md overflow-visible">
+              <UpswingMark size={26} className="text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">UPSWING</h1>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">AI Detection</p>
+              <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">
+                <UpswingWordmark />
+              </h1>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">Early Warning System</p>
             </div>
           </Link>
         </div>
@@ -122,7 +126,7 @@ const Sidebar: React.FC = () => {
         {/* Footer */}
         <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
           <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
-            UPSWING v1.0
+            UPswing v1.0 · © 2026 UPswing
           </p>
           <p className="text-xs text-neutral-400 dark:text-neutral-500 text-center mt-1">
             Early Warning System

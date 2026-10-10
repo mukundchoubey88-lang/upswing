@@ -8,6 +8,7 @@ import {
   Download,
   Printer,
   Eye,
+  AlertCircle,
 } from 'lucide-react'
 import {
   BarChart,
@@ -26,21 +27,23 @@ import studentService from '../services/studentService'
 import { useInterventionsStore } from '../store/interventionsStore'
 import ChartCard from '../components/common/ChartCard'
 
-type ReportType = 'risk-summary' | 'attendance' | 'performance' | 'department' | 'interventions'
+type ReportType = 'risk-summary' | 'attendance' | 'performance' | 'department' | 'interventions' | 'at-risk-students'
 
 interface ReportConfig {
   key: ReportType
   title: string
   description: string
   icon: React.ElementType
+  iconColor: string
 }
 
 const reportConfigs: ReportConfig[] = [
-  { key: 'risk-summary', title: 'Risk Summary Report', description: 'Overview of student risk distribution', icon: AlertTriangle },
-  { key: 'attendance', title: 'Attendance Report', description: 'Student attendance analysis', icon: Calendar },
-  { key: 'performance', title: 'Performance Report', description: 'Academic performance metrics', icon: BarChart3 },
-  { key: 'department', title: 'Department-wise Report', description: 'Department performance comparison', icon: Users },
-  { key: 'interventions', title: 'Intervention Report', description: 'Intervention tracking and status', icon: Target },
+  { key: 'risk-summary', title: 'Risk Summary Report', description: 'Overview of student risk distribution', icon: AlertTriangle, iconColor: 'from-red-500 to-red-600' },
+  { key: 'attendance', title: 'Attendance Report', description: 'Student attendance analysis', icon: Calendar, iconColor: 'from-blue-500 to-blue-600' },
+  { key: 'performance', title: 'Performance Report', description: 'Academic performance metrics', icon: BarChart3, iconColor: 'from-emerald-500 to-emerald-600' },
+  { key: 'department', title: 'Department-wise Report', description: 'Department performance comparison', icon: Users, iconColor: 'from-purple-500 to-purple-600' },
+  { key: 'interventions', title: 'Intervention Report', description: 'Intervention tracking and status', icon: Target, iconColor: 'from-orange-500 to-orange-600' },
+  { key: 'at-risk-students', title: 'At-Risk Students List', description: 'Comprehensive list of high-risk students', icon: AlertCircle, iconColor: 'from-pink-500 to-pink-600' },
 ]
 
 const Reports: React.FC = () => {
@@ -116,6 +119,20 @@ const Reports: React.FC = () => {
     }))
   }, [interventions])
 
+  const atRiskStudentsData = useMemo(() => {
+    return students
+      .filter(s => s.riskLevel === 'High')
+      .map(s => ({
+        Name: s.name,
+        'Roll Number': s.rollNumber,
+        Department: s.department,
+        'Avg Performance': s.avgPerformance,
+        Attendance: s.attendance,
+        'Failed Subjects': s.failedSubjects,
+        Trend: s.trend,
+      }))
+  }, [students])
+
   // Chart Data
   const riskChartData = [
     { name: 'High', value: stats.high_risk_count, color: '#ef4444' },
@@ -166,6 +183,7 @@ const Reports: React.FC = () => {
       'performance': { data: performanceData, filename: 'performance_report' },
       'department': { data: departmentData, filename: 'department_report' },
       'interventions': { data: interventionReportData, filename: 'intervention_report' },
+      'at-risk-students': { data: atRiskStudentsData, filename: 'at_risk_students_report' },
     }
 
     const { data, filename } = dataMap[selectedReport]
@@ -188,6 +206,8 @@ const Reports: React.FC = () => {
         return departmentData
       case 'interventions':
         return interventionReportData.slice(0, 10)
+      case 'at-risk-students':
+        return atRiskStudentsData
       default:
         return []
     }
@@ -198,7 +218,7 @@ const Reports: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 page-enter">
+      <div className="space-y-5 page-enter">
         <div>
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-50">
             Reports
@@ -221,7 +241,7 @@ const Reports: React.FC = () => {
               onClick={() => setSelectedReport(config.key)}
             >
               <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-sm">
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${config.iconColor} flex items-center justify-center shadow-sm`}>
                   <config.icon className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex gap-2">

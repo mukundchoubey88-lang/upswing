@@ -1,167 +1,137 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import studentService from '../services/studentService'
+import { create } from 'zustand';
+import studentService from '../services/studentService';
 
 export interface Intervention {
-  id: string
-  studentId: number
-  studentName: string
-  type: 'Attendance Counseling' | 'Academic Mentoring' | 'Parent Meeting' | 'Extra Tutoring' | 'Performance Monitoring' | 'Other'
-  status: 'Planned' | 'In Progress' | 'Completed'
-  priority: 'High' | 'Medium' | 'Low'
-  assignedTo: string
-  dueDate: string
-  notes: string
-  createdAt: string
+  id: string;
+  studentId: number;
+  studentName: string;
+  type: 'Attendance Counseling' | 'Academic Mentoring' | 'Parent Meeting' | 'Extra Tutoring' | 'Performance Monitoring' | 'Other';
+  notes: string;
+  status: 'Planned' | 'In Progress' | 'Completed';
+  priority: 'High' | 'Medium' | 'Low';
+  assignedTo: string;
+  dueDate: string;
+  createdAt: string;
 }
 
-interface InterventionState {
-  interventions: Intervention[]
-  addIntervention: (intervention: Omit<Intervention, 'id' | 'createdAt'>) => void
-  updateIntervention: (id: string, updates: Partial<Intervention>) => void
-  deleteIntervention: (id: string) => void
-  updateStatus: (id: string, status: Intervention['status']) => void
-  getInterventionsByStudent: (studentId: number) => Intervention[]
-}
+const STORAGE_KEY = 'eduvision_interventions';
 
-const generateInitialInterventions = (): Intervention[] => {
-  const students = studentService.getStudents()
-  const highAndMediumRisk = students.filter(s => s.riskLevel === 'High' || s.riskLevel === 'Medium')
-  const interventions: Intervention[] = []
-  const now = new Date()
-
-  const addDays = (date: Date, days: number): string => {
-    const result = new Date(date)
-    result.setDate(result.getDate() + days)
-    return result.toISOString().split('T')[0]
+const saveToStorage = (interventions: Intervention[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(interventions));
+  } catch (e) {
+    console.warn('Failed to save interventions to localStorage', e);
   }
+};
 
-  highAndMediumRisk.forEach(student => {
-    if (student.riskLevel === 'High') {
-      // High risk students get more intensive interventions
-      interventions.push({
-        id: `int-${student.id}-1`,
-        studentId: student.id,
-        studentName: student.name,
-        type: 'Attendance Counseling',
-        status: 'Planned',
-        priority: 'High',
-        assignedTo: 'Admin',
-        dueDate: addDays(now, 3),
-        notes: `Address attendance rate of ${student.attendance}%`,
-        createdAt: now.toISOString(),
-      })
-      interventions.push({
-        id: `int-${student.id}-2`,
-        studentId: student.id,
-        studentName: student.name,
-        type: 'Academic Mentoring',
-        status: 'Planned',
-        priority: 'High',
-        assignedTo: 'Mentor',
-        dueDate: addDays(now, 5),
-        notes: `Improve academic performance, current avg: ${student.avgPerformance}%`,
-        createdAt: now.toISOString(),
-      })
-      interventions.push({
-        id: `int-${student.id}-3`,
-        studentId: student.id,
-        studentName: student.name,
-        type: 'Parent Meeting',
-        status: 'Planned',
-        priority: 'Medium',
-        assignedTo: 'Admin',
-        dueDate: addDays(now, 7),
-        notes: 'Discuss student progress and support plan',
-        createdAt: now.toISOString(),
-      })
+const loadFromStorage = (): Intervention[] | null => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.warn('Failed to load interventions from localStorage', e);
+  }
+  return null;
+};
+
+const generateSeedInterventions = (): Intervention[] => {
+  const students = studentService.getStudents();
+  const highRisk = students.filter(s => s.riskLevel.toLowerCase() === 'high').slice(0, 2);
+  const mediumRisk = students.filter(s => s.riskLevel.toLowerCase() === 'medium').slice(0, 1);
+  const targets = [...highRisk, ...mediumRisk];
+
+  const types: Intervention['type'][] = [
+    'Attendance Counseling',
+    'Academic Mentoring',
+    'Parent Meeting',
+  ];
+  const statuses: Intervention['status'][] = ['Planned', 'In Progress', 'Planned'];
+  const priorities: Intervention['priority'][] = ['High', 'High', 'Medium'];
+  const notes = [
+    'Student showing persistent attendance issues. Schedule counseling session.',
+    'Academic performance declining. Assign mentoring program.',
+    'Notify parents about current academic standing.',
+  ];
+
+  return targets.map((s, i) => ({
+    id: `${Date.now() + i}-${Math.floor(Math.random() * 10000)}`,
+    studentId: s.id,
+    studentName: s.name,
+    type: types[i % types.length],
+    notes: notes[i % notes.length],
+    status: statuses[i % statuses.length],
+    priority: priorities[i % priorities.length],
+    assignedTo: 'Academic Advisor',
+    dueDate: new Date(Date.now() + (7 + i * 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    createdAt: new Date().toISOString(),
+  }));
+};
+
+interface InterventionsState {
+  interventions: Intervention[];
+  loading: boolean;
+  addIntervention: (intervention: Omit<Intervention, 'id' | 'createdAt'>) => void;
+  updateIntervention: (id: string, updates: Partial<Intervention>) => void;
+  removeIntervention: (id: string) => void;
+  updateStatus: (id: string, status: Intervention['status']) => void;
+  getInterventionsByStudent: (studentId: number) => Intervention[];
+  initializeInterventions: () => void;
+}
+
+export const useInterventionsStore = create<InterventionsState>((set, get) => ({
+  interventions: [],
+  loading: false,
+
+  addIntervention: (intervention) => {
+    const newItem: Intervention = {
+      ...intervention,
+      id: `${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [...get().interventions, newItem];
+    saveToStorage(updated);
+    set({ interventions: updated });
+  },
+
+  updateIntervention: (id, updates) => {
+    const updated = get().interventions.map(item =>
+      item.id === id ? { ...item, ...updates } : item
+    );
+    saveToStorage(updated);
+    set({ interventions: updated });
+  },
+
+  removeIntervention: (id) => {
+    const updated = get().interventions.filter(item => item.id !== id);
+    saveToStorage(updated);
+    set({ interventions: updated });
+  },
+
+  updateStatus: (id, status) => {
+    const updated = get().interventions.map(item =>
+      item.id === id ? { ...item, status } : item
+    );
+    saveToStorage(updated);
+    set({ interventions: updated });
+  },
+
+  getInterventionsByStudent: (studentId) => {
+    return get().interventions.filter(item => item.studentId === studentId);
+  },
+
+  initializeInterventions: () => {
+    const stored = loadFromStorage();
+    if (stored) {
+      set({ interventions: stored });
     } else {
-      // Medium risk students
-      interventions.push({
-        id: `int-${student.id}-1`,
-        studentId: student.id,
-        studentName: student.name,
-        type: 'Performance Monitoring',
-        status: 'Planned',
-        priority: 'Medium',
-        assignedTo: 'Teacher',
-        dueDate: addDays(now, 7),
-        notes: `Monitor progress, current avg: ${student.avgPerformance}%`,
-        createdAt: now.toISOString(),
-      })
-      interventions.push({
-        id: `int-${student.id}-2`,
-        studentId: student.id,
-        studentName: student.name,
-        type: 'Extra Tutoring',
-        status: 'Planned',
-        priority: 'Low',
-        assignedTo: 'Tutor',
-        dueDate: addDays(now, 14),
-        notes: 'Additional tutoring support for improvement',
-        createdAt: now.toISOString(),
-      })
+      const seed = generateSeedInterventions();
+      saveToStorage(seed);
+      set({ interventions: seed });
     }
-  })
+  },
+}));
 
-  return interventions
-}
-
-export const useInterventionsStore = create<InterventionState>()(
-  persist(
-    (set, get) => ({
-      interventions: [],
-
-      addIntervention: (intervention) => {
-        const newIntervention: Intervention = {
-          ...intervention,
-          id: `int-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          createdAt: new Date().toISOString(),
-        }
-        set((state) => ({
-          interventions: [...state.interventions, newIntervention],
-        }))
-      },
-
-      updateIntervention: (id, updates) => {
-        set((state) => ({
-          interventions: state.interventions.map((int) =>
-            int.id === id ? { ...int, ...updates } : int
-          ),
-        }))
-      },
-
-      deleteIntervention: (id) => {
-        set((state) => ({
-          interventions: state.interventions.filter((int) => int.id !== id),
-        }))
-      },
-
-      updateStatus: (id, status) => {
-        set((state) => ({
-          interventions: state.interventions.map((int) =>
-            int.id === id ? { ...int, status } : int
-          ),
-        }))
-      },
-
-      getInterventionsByStudent: (studentId) => {
-        return get().interventions.filter((int) => int.studentId === studentId)
-      },
-    }),
-    {
-      name: 'eduvision-interventions',
-      onRehydrateStorage: () => (state) => {
-        // Initialize with generated interventions if empty
-        if (state && state.interventions.length === 0) {
-          state.interventions = generateInitialInterventions()
-        }
-      },
-    }
-  )
-)
-
-// Initialize interventions if empty
-if (useInterventionsStore.getState().interventions.length === 0) {
-  useInterventionsStore.setState({ interventions: generateInitialInterventions() })
-}
+export default useInterventionsStore;

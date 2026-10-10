@@ -117,7 +117,7 @@ const StatCard: React.FC<StatCardProps> = ({
             </p>
           )}
         </div>
-        <div className={`w-12 h-12 rounded-xl ${config.bg} flex items-center justify-center shadow-sm`}>
+        <div className={`w-12 h-12 rounded-lg ${config.bg} flex items-center justify-center shadow-sm`}>
           <Icon className="w-6 h-6 text-white" />
         </div>
       </div>

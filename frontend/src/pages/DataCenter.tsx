@@ -274,7 +274,7 @@ const DataCenter: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 page-enter">
+      <div className="space-y-5 page-enter">
         <div>
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-50">
             Data Center
@@ -306,7 +306,9 @@ const DataCenter: React.FC = () => {
           />
           <StatCard
             title="Last Updated"
-            value={dataQuality.lastUpdated}
+            value={typeof dataQuality.lastUpdated === 'string' && dataQuality.lastUpdated !== 'N/A' 
+              ? new Date(dataQuality.lastUpdated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+              : 'N/A'}
             icon={RefreshCw}
             color="green"
           />

@@ -119,7 +119,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-8 page-enter">
+      <div className="space-y-5 page-enter">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-50">
             Welcome, {user?.name}
@@ -407,20 +407,18 @@ const QuickLink: React.FC<QuickLinkProps> = ({ title, description, icon: Icon, h
   return (
     <Link
       to={href}
-      className="bg-white dark:bg-neutral-800 p-5 rounded-card shadow-card border border-neutral-200/60 dark:border-neutral-700/60 hover:shadow-card-hover hover:-translate-y-0.5 transition-all group"
+      className="bg-white dark:bg-neutral-800 p-3 rounded-card shadow-card border border-neutral-200/60 dark:border-neutral-700/60 hover:shadow-card-hover hover:-translate-y-0.5 transition-all group flex items-center gap-3"
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-            {title}
-          </h3>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-            {description}
-          </p>
-        </div>
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-sm">
-          <Icon className="w-5 h-5 text-white" />
-        </div>
+      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-sm flex-shrink-0">
+        <Icon className="w-4 h-4 text-white" />
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-50 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+          {title}
+        </h3>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1">
+          {description}
+        </p>
       </div>
     </Link>
   )

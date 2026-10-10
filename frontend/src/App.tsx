@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import { queryClient } from './lib/queryClient'
+import UpswingIntro from './components/UpswingIntro'
 
 // Pages
 import Login from './pages/Login'
@@ -20,10 +23,24 @@ import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 
 function App() {
+  const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem("upswing_intro"));
+
+  if (showIntro) {
+    return (
+      <UpswingIntro
+        onDone={() => {
+          sessionStorage.setItem("upswing_intro", "1");
+          setShowIntro(false);
+        }}
+      />
+    );
+  }
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <AuthProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <AuthProvider>
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
@@ -114,15 +131,16 @@ function App() {
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
-        </AuthProvider>
-      </Router>
-      
-      {/* Toast Notifications */}
-      <Toaster position="top-right" />
-      
-      {/* React Query Devtools (dev only) */}
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+          </AuthProvider>
+        </Router>
+        
+        {/* Toast Notifications */}
+        <Toaster position="top-right" />
+        
+        {/* React Query Devtools (dev only) */}
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </ThemeProvider>
   )
 }
 

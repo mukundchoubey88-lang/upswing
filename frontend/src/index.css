@@ -4,12 +4,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Variables for theming */
+:root {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --border: #e5e7eb;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --primary: #2563eb;
+  --primary-soft: #eff6ff;
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0b1120;
+  --surface: #111a2e;
+  --surface-2: #172036;
+  --border: #1e293b;
+  --text: #e5e7eb;
+  --text-muted: #94a3b8;
+  --primary: #3b82f6;
+  --primary-soft: rgba(59, 130, 246, 0.15);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.25);
+  
+  color-scheme: dark;
+}
+
+html {
+  background-color: var(--bg);
+}
+
 * {
   @apply transition-colors;
 }
 
 body {
   @apply bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 font-sans;
+  background-color: var(--bg);
+  color: var(--text);
 }
 
 /* Page background gradient */
@@ -17,13 +54,16 @@ body {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
-.dark .page-bg {
-  background: linear-gradient(135deg, #171717 0%, #0a0a0a 100%);
+[data-theme="dark"] .page-bg {
+  background: linear-gradient(135deg, #172036 0%, #0f172a 100%);
 }
 
 /* Card styles */
 .card {
   @apply bg-white dark:bg-neutral-800 rounded-card shadow-card border border-neutral-200/60 dark:border-neutral-700/60;
+  background-color: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow);
 }
 
 /* Focus rings */
@@ -38,7 +78,7 @@ body {
   @apply animate-shimmer;
 }
 
-.dark .skeleton {
+[data-theme="dark"] .skeleton {
   background: linear-gradient(90deg, #404040 25%, #525252 50%, #404040 75%);
   background-size: 200% 100%;
 }
@@ -56,6 +96,7 @@ body {
 /* Improved contrast for text */
 .text-muted {
   @apply text-neutral-600 dark:text-neutral-400;
+  color: var(--text-muted);
 }
 
 .text-muted-light {
@@ -70,8 +111,65 @@ body {
 
 ::-webkit-scrollbar-track {
   @apply bg-neutral-100 dark:bg-neutral-800;
+  background-color: var(--surface-2);
 }
 
 ::-webkit-scrollbar-thumb {
   @apply bg-neutral-300 dark:bg-neutral-600 rounded-full hover:bg-neutral-400 dark:hover:bg-neutral-500;
+  background-color: var(--border);
+}
+
+/* Input and form control styling for dark mode */
+input, select, textarea {
+  background-color: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Select styling with chevron */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230f172a' d='M1 4l5 4 5-4'/%3E%3C/svg%3E");
+  [data-theme="dark"] & {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23e5e7eb' d='M1 4l5 4 5-4'/%3E%3C/svg%3E");
+  }
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  @apply fixed inset-0 bg-black/50;
+}
+
+[data-theme="dark"] .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Smooth transitions for theme switching */
+body, 
+.sidebar, 
+.header, 
+.card,
+input,
+select,
+textarea {
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body, 
+  .sidebar, 
+  .header, 
+  .card,
+  input,
+  select,
+  textarea {
+    transition: none;
+  }
 }

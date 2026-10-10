@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Settings as SettingsIcon, Users, Bell, Moon, Sun, Sliders, ChevronDown, ChevronUp, Save } from 'lucide-react'
 import MainLayout from '../layouts/MainLayout'
+import { useTheme } from '../context/ThemeContext'
 import { useSettingsStore } from '../store/settingsStore'
 
 interface DemoUser {
@@ -17,6 +18,7 @@ const demoUsers: DemoUser[] = [
 ]
 
 const Settings: React.FC = () => {
+  const { theme, setTheme } = useTheme()
   const { settings, updateSettings, updateNotificationPreference } = useSettingsStore()
   const [expandedCard, setExpandedCard] = useState<'general' | 'users' | null>('general')
   const [saved, setSaved] = useState(false)
@@ -41,7 +43,7 @@ const Settings: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 page-enter">
+      <div className="space-y-5 page-enter">
         <div>
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-50">
             Settings
@@ -195,7 +197,7 @@ const Settings: React.FC = () => {
                 {/* Theme Toggle */}
                 <div className="py-5">
                   <div className="flex items-center gap-2 mb-4">
-                    {settings.theme === 'dark' ? (
+                    {theme === 'dark' ? (
                       <Moon className="w-4 h-4 text-neutral-500" />
                     ) : (
                       <Sun className="w-4 h-4 text-neutral-500" />
@@ -204,9 +206,9 @@ const Settings: React.FC = () => {
                   </div>
                   <div className="flex gap-3">
                     <button
-                      onClick={() => updateSettings({ theme: 'light' })}
+                      onClick={() => setTheme('light')}
                       className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                        settings.theme === 'light'
+                        theme === 'light'
                           ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
                           : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400'
                       }`}
@@ -215,9 +217,9 @@ const Settings: React.FC = () => {
                       Light
                     </button>
                     <button
-                      onClick={() => updateSettings({ theme: 'dark' })}
+                      onClick={() => setTheme('dark')}
                       className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                        settings.theme === 'dark'
+                        theme === 'dark'
                           ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
                           : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400'
                       }`}

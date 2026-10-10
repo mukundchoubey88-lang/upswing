@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Settings, HelpCircle, LogOut, AlertTriangle, Calendar, Target, Info } from 'lucide-react'
+import { Bell, Settings, HelpCircle, LogOut, AlertTriangle, Calendar, Target, Info, Sun, Moon } from 'lucide-react'
+import { UpswingMark } from '../UpswingIntro'
+import UpswingWordmark from '../UpswingWordmark'
 import { useNotificationStore } from '../../store/notificationsStore'
 import { formatDistanceToNow } from 'date-fns'
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
@@ -81,19 +85,32 @@ const Header: React.FC = () => {
 
   return (
     <header className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 shadow-sm sticky top-0 z-40">
-      <div className="flex items-center justify-between h-16 px-6 md:px-8">
-        {/* Left: Logo/Title */}
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-            U
+      <div className="flex items-center justify-between h-14 px-6 md:px-8">
+        {/* Left: Logo/Title (mobile/tablet only) */}
+        <div className="flex items-center space-x-2 lg:hidden">
+          <div className="w-7 h-7 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+            <UpswingMark size={18} className="text-white" />
           </div>
-          <h1 className="text-lg font-bold text-neutral-900 dark:text-neutral-50 hidden sm:block">
-            UPSWING
+          <h1 className="text-sm font-bold text-neutral-900 dark:text-neutral-50 hidden sm:block">
+            <UpswingWordmark />
           </h1>
         </div>
 
         {/* Right: User Menu */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 ml-auto">
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="relative p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700"
+            aria-label="Toggle theme"
+          >
+            {theme === 'light' ? (
+              <Moon className="w-5 h-5" />
+            ) : (
+              <Sun className="w-5 h-5" />
+            )}
+          </button>
+
           {/* Notifications */}
           <div className="relative" ref={notifRef}>
             <button
@@ -103,7 +120,7 @@ const Header: React.FC = () => {
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -right-1 top-0 min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-neutral-800">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}

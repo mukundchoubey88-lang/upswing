@@ -114,7 +114,7 @@ const Interventions: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 page-enter">
+      <div className="space-y-5 page-enter">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-50">
@@ -174,7 +174,7 @@ const Interventions: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
             >
               <option value="">All Statuses</option>
               <option value="Planned">Planned</option>
@@ -184,7 +184,7 @@ const Interventions: React.FC = () => {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
             >
               <option value="">All Priorities</option>
               <option value="High">High</option>
@@ -222,7 +222,9 @@ const Interventions: React.FC = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-semibold text-neutral-900 dark:text-neutral-100">{intervention.studentName}</p>
+                          <span className="text-xs text-neutral-500 dark:text-neutral-400">Risk:</span>
                           <RiskBadge level={studentRisk} size="sm" />
+                          <span className="text-xs text-neutral-500 dark:text-neutral-400">Priority:</span>
                           <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getPriorityColor(intervention.priority)}`}>
                             {intervention.priority}
                           </span>
@@ -291,7 +293,7 @@ const Interventions: React.FC = () => {
                   value={formData.studentId}
                   onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
                   required
-                  className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
                 >
                   <option value="">Select student</option>
                   {students.map(s => (
@@ -304,7 +306,7 @@ const Interventions: React.FC = () => {
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as Intervention['type'] })}
-                  className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
                 >
                   <option value="Attendance Counseling">Attendance Counseling</option>
                   <option value="Academic Mentoring">Academic Mentoring</option>
@@ -340,7 +342,7 @@ const Interventions: React.FC = () => {
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value as Intervention['priority'] })}
-                    className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none pr-8"
                   >
                     <option value="High">High</option>
                     <option value="Medium">Medium</option>

@@ -2,7 +2,7 @@ import React from 'react'
 
 interface SkeletonProps {
   className?: string
-  variant?: 'text' | 'card' | 'circle' | 'rect'
+  variant?: 'text' | 'card' | 'circle'
   width?: string | number
   height?: string | number
   lines?: number
@@ -10,7 +10,7 @@ interface SkeletonProps {
 
 const Skeleton: React.FC<SkeletonProps> = ({
   className = '',
-  variant = 'rect',
+  variant = 'text',
   width,
   height,
   lines,
@@ -18,10 +18,9 @@ const Skeleton: React.FC<SkeletonProps> = ({
   const baseClasses = 'skeleton rounded'
 
   const variantClasses = {
-    text: 'h-4 rounded',
-    card: 'h-32 rounded-card',
-    circle: 'rounded-full',
-    rect: 'rounded',
+    text: 'h-4 w-full rounded',
+    card: 'h-32 w-full rounded-card',
+    circle: 'w-10 h-10 rounded-full',
   }
 
   if (variant === 'text' && lines && lines > 1) {
@@ -55,12 +54,12 @@ export const SkeletonCard: React.FC<{ className?: string }> = ({ className = '' 
   return (
     <div className={`bg-white dark:bg-neutral-800 rounded-card shadow-card border border-neutral-200/60 dark:border-neutral-700/60 p-5 ${className}`}>
       <div className="flex items-start justify-between">
-        <div className="flex-1 space-y-3">
-          <Skeleton variant="text" width="40%" height={14} />
-          <Skeleton variant="text" width="60%" height={28} />
-          <Skeleton variant="text" width="50%" height={12} />
+        <div className="flex-1 space-y-3 w-full">
+          <Skeleton variant="text" />
+          <Skeleton variant="text" />
+          <Skeleton variant="text" width="50%" />
         </div>
-        <Skeleton variant="circle" width={48} height={48} />
+        <Skeleton variant="circle" />
       </div>
     </div>
   )

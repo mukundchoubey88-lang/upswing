@@ -19,7 +19,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
-          <div className="p-6 md:p-8">
+          <div className="p-6 md:p-8 pt-5 md:pt-6">
             {children}
           </div>
         </main>
