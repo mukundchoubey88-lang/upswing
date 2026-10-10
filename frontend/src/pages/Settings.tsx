@@ -1,41 +1,51 @@
 import React, { useState } from 'react'
-import { Settings as SettingsIcon, Users, Bell, Moon, Sun, Sliders, ChevronDown, ChevronUp, Save } from 'lucide-react'
+import { ChevronDown, ChevronUp, Save, RotateCcw } from 'lucide-react'
 import MainLayout from '../layouts/MainLayout'
-import { useTheme } from '../context/ThemeContext'
 import { useSettingsStore } from '../store/settingsStore'
 
-interface DemoUser {
-  name: string
-  email: string
-  role: 'Admin' | 'Teacher' | 'Counselor'
-  active: boolean
-}
-
-const demoUsers: DemoUser[] = [
-  { name: 'Admin User', email: 'admin@eduvision.com', role: 'Admin', active: true },
-  { name: 'Teacher User', email: 'teacher@eduvision.com', role: 'Teacher', active: true },
-  { name: 'Counselor User', email: 'counselor@eduvision.com', role: 'Counselor', active: false },
-]
-
 const Settings: React.FC = () => {
-  const { theme, setTheme } = useTheme()
-  const { settings, updateSettings, updateNotificationPreference } = useSettingsStore()
-  const [expandedCard, setExpandedCard] = useState<'general' | 'users' | null>('general')
-  const [saved, setSaved] = useState(false)
+  const { settings, updateSettings, resetToDefaults } = useSettingsStore()
+  const [generalOpen, setGeneralOpen] = useState(true)
+  const [usersOpen, setUsersOpen] = useState(false)
+  const [localAttendance, setLocalAttendance] = useState(settings.attendanceThreshold)
+  const [localPerformance, setLocalPerformance] = useState(settings.performanceThreshold)
+  const [localNotifications, setLocalNotifications] = useState(settings.notificationsEnabled)
+  const [localTheme, setLocalTheme] = useState<'light' | 'dark'>(settings.theme)
+  const [users, setUsers] = useState([
+    { name: 'Admin User', email: 'admin@eduvision.local', role: 'Admin' as const, active: true },
+    { name: 'Teacher User', email: 'teacher@eduvision.local', role: 'Teacher' as const, active: true },
+    { name: 'Counselor User', email: 'counselor@eduvision.local', role: 'Counselor' as const, active: false },
+  ])
 
-  const handleSaveThresholds = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+  const handleSave = () => {
+    updateSettings({
+      attendanceThreshold: localAttendance,
+      performanceThreshold: localPerformance,
+      notificationsEnabled: localNotifications,
+      theme: localTheme,
+    })
+  }
+
+  const handleReset = () => {
+    resetToDefaults()
+    setLocalAttendance(65)
+    setLocalPerformance(65)
+    setLocalNotifications(true)
+    setLocalTheme('light')
+  }
+
+  const toggleUserStatus = (index: number) => {
+    setUsers(prev => prev.map((u, i) => i === index ? { ...u, active: !u.active } : u))
   }
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'Admin':
-        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+        return 'bg-red-100 text-red-700'
       case 'Teacher':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+        return 'bg-blue-100 text-blue-700'
       case 'Counselor':
-        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+        return 'bg-green-100 text-green-700'
       default:
         return 'bg-neutral-100 text-neutral-700'
     }
@@ -43,241 +53,201 @@ const Settings: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-5 page-enter">
+      <div className="space-y-6 page-enter">
         <div>
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-50">
             Settings
           </h1>
           <p className="text-neutral-500 dark:text-neutral-400 mt-2">
-            Manage system settings and preferences
+            Customize your experience and manage users
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* General Settings Card */}
           <div className="bg-white dark:bg-neutral-800 rounded-card shadow-card border border-neutral-200/60 dark:border-neutral-700/60 overflow-hidden">
             <button
-              onClick={() => setExpandedCard(expandedCard === 'general' ? null : 'general')}
+              onClick={() => setGeneralOpen(!generalOpen)}
               className="w-full flex items-center justify-between p-5 hover:bg-neutral-50 dark:hover:bg-neutral-700/30 transition-colors"
+              aria-label={generalOpen ? 'Collapse' : 'Expand'}
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-sm">
-                  <SettingsIcon className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-left">
-                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
-                    General Settings
-                  </h2>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                    System preferences and configuration
-                  </p>
-                </div>
+              <div className="text-left">
+                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+                  General Settings
+                </h2>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  System preferences and configuration
+                </p>
               </div>
-              {expandedCard === 'general' ? (
+              {generalOpen ? (
                 <ChevronUp className="w-5 h-5 text-neutral-400" />
               ) : (
                 <ChevronDown className="w-5 h-5 text-neutral-400" />
               )}
             </button>
 
-            {expandedCard === 'general' && (
+            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+              generalOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+            }`}>
               <div className="px-5 pb-5 border-t border-neutral-200 dark:border-neutral-700">
-                {/* Risk Thresholds */}
+                {/* Attendance Threshold */}
                 <div className="py-5 border-b border-neutral-200 dark:border-neutral-700">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sliders className="w-4 h-4 text-neutral-500" />
-                    <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Risk Thresholds</h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      Attendance Threshold
+                    </label>
+                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                      {localAttendance}%
+                    </span>
                   </div>
-                  <div className="space-y-6">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm text-neutral-600 dark:text-neutral-400">Attendance Cutoff</label>
-                        <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
-                          {settings.attendanceCutoff}%
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min="50"
-                        max="90"
-                        step="5"
-                        value={settings.attendanceCutoff}
-                        onChange={(e) => updateSettings({ attendanceCutoff: parseInt(e.target.value) })}
-                        className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
-                      />
-                      <p className="text-xs text-neutral-500 mt-1">
-                        Students below this attendance will be flagged as at-risk
-                      </p>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm text-neutral-600 dark:text-neutral-400">Performance Cutoff</label>
-                        <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
-                          {settings.performanceCutoff}%
-                        </span>
-                      </div>
-                      <input
-                        type="range"
-                        min="50"
-                        max="90"
-                        step="5"
-                        value={settings.performanceCutoff}
-                        onChange={(e) => updateSettings({ performanceCutoff: parseInt(e.target.value) })}
-                        className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-primary-500"
-                      />
-                      <p className="text-xs text-neutral-500 mt-1">
-                        Students below this average will be flagged as at-risk
-                      </p>
-                    </div>
-                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={localAttendance}
+                    onChange={(e) => setLocalAttendance(parseInt(e.target.value))}
+                    className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  />
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                    Minimum attendance for low-risk classification
+                  </p>
                 </div>
 
-                {/* Notification Preferences */}
+                {/* Performance Threshold */}
                 <div className="py-5 border-b border-neutral-200 dark:border-neutral-700">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Bell className="w-4 h-4 text-neutral-500" />
-                    <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Notification Preferences</h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                      Performance Threshold
+                    </label>
+                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                      {localPerformance}%
+                    </span>
                   </div>
-                  <div className="space-y-3">
-                    <label className="flex items-center justify-between cursor-pointer">
-                      <span className="text-sm text-neutral-600 dark:text-neutral-400">High Risk Alerts</span>
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={settings.notifications.highRisk}
-                          onChange={(e) => updateNotificationPreference('highRisk', e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-neutral-200 dark:bg-neutral-700 rounded-full peer peer-checked:bg-primary-500 transition-colors"></div>
-                        <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                      </div>
-                    </label>
-                    <label className="flex items-center justify-between cursor-pointer">
-                      <span className="text-sm text-neutral-600 dark:text-neutral-400">Low Attendance Alerts</span>
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={settings.notifications.attendance}
-                          onChange={(e) => updateNotificationPreference('attendance', e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-neutral-200 dark:bg-neutral-700 rounded-full peer peer-checked:bg-primary-500 transition-colors"></div>
-                        <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                      </div>
-                    </label>
-                    <label className="flex items-center justify-between cursor-pointer">
-                      <span className="text-sm text-neutral-600 dark:text-neutral-400">Intervention Reminders</span>
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={settings.notifications.interventions}
-                          onChange={(e) => updateNotificationPreference('interventions', e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-neutral-200 dark:bg-neutral-700 rounded-full peer peer-checked:bg-primary-500 transition-colors"></div>
-                        <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                      </div>
-                    </label>
-                    <label className="flex items-center justify-between cursor-pointer">
-                      <span className="text-sm text-neutral-600 dark:text-neutral-400">Performance Alerts</span>
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={settings.notifications.performance}
-                          onChange={(e) => updateNotificationPreference('performance', e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-neutral-200 dark:bg-neutral-700 rounded-full peer peer-checked:bg-primary-500 transition-colors"></div>
-                        <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                      </div>
-                    </label>
-                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={localPerformance}
+                    onChange={(e) => setLocalPerformance(parseInt(e.target.value))}
+                    className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  />
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                    Minimum average performance for low-risk classification
+                  </p>
                 </div>
 
-                {/* Theme Toggle */}
-                <div className="py-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    {theme === 'dark' ? (
-                      <Moon className="w-4 h-4 text-neutral-500" />
-                    ) : (
-                      <Sun className="w-4 h-4 text-neutral-500" />
-                    )}
-                    <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Theme</h3>
-                  </div>
-                  <div className="flex gap-3">
+                {/* Notifications Toggle */}
+                <div className="py-5 border-b border-neutral-200 dark:border-neutral-700">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                        Notifications
+                      </label>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                        Enable notifications for high-risk alerts
+                      </p>
+                    </div>
                     <button
-                      onClick={() => setTheme('light')}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                        theme === 'light'
-                          ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
-                          : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400'
+                      onClick={() => setLocalNotifications(!localNotifications)}
+                      className={`relative w-11 h-6 rounded-full transition-colors ${
+                        localNotifications ? 'bg-blue-500' : 'bg-neutral-300 dark:bg-neutral-600'
+                      }`}
+                      role="switch"
+                      aria-checked={localNotifications}
+                    >
+                      <span
+                        className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                          localNotifications ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Theme Selector */}
+                <div className="py-5 border-b border-neutral-200 dark:border-neutral-700">
+                  <label className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    Theme
+                  </label>
+                  <div className="flex gap-3 mt-3">
+                    <button
+                      onClick={() => setLocalTheme('light')}
+                      className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
+                        localTheme === 'light'
+                          ? 'bg-blue-50 border-blue-500 text-blue-700'
+                          : 'border-neutral-300 text-neutral-600'
                       }`}
                     >
-                      <Sun className="w-4 h-4" />
                       Light
                     </button>
                     <button
-                      onClick={() => setTheme('dark')}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
-                        theme === 'dark'
-                          ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-500 text-primary-700 dark:text-primary-300'
-                          : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400'
+                      onClick={() => setLocalTheme('dark')}
+                      className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
+                        localTheme === 'dark'
+                          ? 'bg-blue-50 border-blue-500 text-blue-700'
+                          : 'border-neutral-300 text-neutral-600'
                       }`}
                     >
-                      <Moon className="w-4 h-4" />
                       Dark
                     </button>
                   </div>
                 </div>
 
-                {/* Save Button */}
-                <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                {/* Action Buttons */}
+                <div className="pt-5 flex gap-3">
                   <button
-                    onClick={handleSaveThresholds}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium text-sm rounded-lg transition-colors"
+                    onClick={handleSave}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg transition-colors"
                   >
                     <Save className="w-4 h-4" />
-                    {saved ? 'Saved!' : 'Save Settings'}
+                    Save
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    className="flex items-center gap-2 px-4 py-2 border border-neutral-300 hover:bg-neutral-50 text-neutral-600 font-medium text-sm rounded-lg transition-colors"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Reset to Defaults
                   </button>
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
           {/* User Management Card */}
           <div className="bg-white dark:bg-neutral-800 rounded-card shadow-card border border-neutral-200/60 dark:border-neutral-700/60 overflow-hidden">
             <button
-              onClick={() => setExpandedCard(expandedCard === 'users' ? null : 'users')}
+              onClick={() => setUsersOpen(!usersOpen)}
               className="w-full flex items-center justify-between p-5 hover:bg-neutral-50 dark:hover:bg-neutral-700/30 transition-colors"
+              aria-label={usersOpen ? 'Collapse' : 'Expand'}
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-sm">
-                  <Users className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-left">
-                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
-                    User Management
-                  </h2>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                    Manage system users and permissions
-                  </p>
-                </div>
+              <div className="text-left">
+                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+                  User Management
+                </h2>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  Manage system users and permissions
+                </p>
               </div>
-              {expandedCard === 'users' ? (
+              {usersOpen ? (
                 <ChevronUp className="w-5 h-5 text-neutral-400" />
               ) : (
                 <ChevronDown className="w-5 h-5 text-neutral-400" />
               )}
             </button>
 
-            {expandedCard === 'users' && (
+            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+              usersOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+            }`}>
               <div className="px-5 pb-5 border-t border-neutral-200 dark:border-neutral-700">
                 <div className="overflow-x-auto mt-4">
                   <table className="min-w-full text-sm">
                     <thead className="bg-neutral-50 dark:bg-neutral-900/50">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                          Name
+                          Username
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                           Email
@@ -291,7 +261,7 @@ const Settings: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
-                      {demoUsers.map((user, idx) => (
+                      {users.map((user, idx) => (
                         <tr key={idx} className="hover:bg-neutral-50 dark:hover:bg-neutral-700/30">
                           <td className="px-4 py-3 font-medium text-neutral-900 dark:text-neutral-100">
                             {user.name}
@@ -305,27 +275,24 @@ const Settings: React.FC = () => {
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={user.active}
-                                readOnly
-                                className="sr-only peer"
-                              />
-                              <div className="w-9 h-5 bg-neutral-200 dark:bg-neutral-700 rounded-full peer peer-checked:bg-green-500 transition-colors"></div>
-                              <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
-                            </label>
+                            <button
+                              onClick={() => toggleUserStatus(idx)}
+                              className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                                user.active
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-neutral-100 text-neutral-600'
+                              }`}
+                            >
+                              {user.active ? 'Active' : 'Inactive'}
+                            </button>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-4">
-                  * User management is demo-only. Full authentication system coming soon.
-                </p>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
