@@ -12,7 +12,6 @@ export interface Settings {
     interventions: boolean;
     performance: boolean;
   };
-  theme: 'light' | 'dark';
 }
 
 const STORAGE_KEY = 'eduvision_settings';
@@ -29,7 +28,6 @@ const DEFAULT_SETTINGS: Settings = {
     interventions: true,
     performance: true,
   },
-  theme: 'light',
 };
 
 const saveToStorage = (settings: Settings) => {

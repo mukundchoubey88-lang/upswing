@@ -88,12 +88,12 @@ const Header: React.FC = () => {
   return (
     <header className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 shadow-sm sticky top-0 z-40">
       <div className="flex items-center justify-between h-14 px-6 md:px-8">
-        {/* Left: Logo/Title (mobile/tablet only) */}
-        <div className="flex items-center space-x-2 lg:hidden">
+        {/* Left: Logo (only when sidebar is hidden on mobile) */}
+        <div className="flex items-center space-x-2 md:hidden">
           <div className="w-7 h-7 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
             <UpswingMark size={18} className="text-white" />
           </div>
-          <h1 className="text-sm font-bold text-neutral-900 dark:text-neutral-50 hidden sm:block">
+          <h1 className="text-sm font-bold text-neutral-900 dark:text-neutral-50">
             <UpswingWordmark />
           </h1>
         </div>

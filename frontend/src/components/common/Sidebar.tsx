@@ -35,7 +35,7 @@ const Sidebar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/')
 
   const navItems: NavItem[] = [
-    { path: '/', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, roles: ['admin', 'teacher', 'student'] },
+    { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, roles: ['admin', 'teacher', 'student'] },
     { path: '/students', label: 'Students', icon: <Users className="w-5 h-5" />, roles: ['admin', 'teacher'] },
     { path: '/risk-analysis', label: 'Risk Analysis', icon: <AlertTriangle className="w-5 h-5" />, roles: ['admin', 'teacher'], badge: highRiskCount },
     { path: '/interventions', label: 'Interventions', icon: <Target className="w-5 h-5" />, roles: ['admin', 'teacher'] },
@@ -69,7 +69,7 @@ const Sidebar: React.FC = () => {
       >
         {/* Logo */}
         <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
-          <Link to="/" className="flex items-center space-x-3">
+          <Link to="/dashboard" className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md overflow-visible">
               <UpswingMark size={26} className="text-white" />
             </div>

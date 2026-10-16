@@ -1,16 +1,23 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ChevronDown, ChevronUp, Save, RotateCcw } from 'lucide-react'
 import MainLayout from '../layouts/MainLayout'
 import { useSettingsStore } from '../store/settingsStore'
+import { useTheme } from '../context/ThemeContext'
 
 const Settings: React.FC = () => {
   const { settings, updateSettings, resetToDefaults } = useSettingsStore()
+  const { theme, setTheme } = useTheme()
   const [generalOpen, setGeneralOpen] = useState(true)
   const [usersOpen, setUsersOpen] = useState(false)
   const [localAttendance, setLocalAttendance] = useState(settings.attendanceThreshold)
   const [localPerformance, setLocalPerformance] = useState(settings.performanceThreshold)
   const [localNotifications, setLocalNotifications] = useState(settings.notificationsEnabled)
-  const [localTheme, setLocalTheme] = useState<'light' | 'dark'>(settings.theme)
+  const [localTheme, setLocalTheme] = useState<'light' | 'dark'>(theme)
+
+  // Sync local theme with ThemeContext
+  useEffect(() => {
+    setLocalTheme(theme)
+  }, [theme])
   const [users, setUsers] = useState([
     { name: 'Admin User', email: 'admin@eduvision.local', role: 'Admin' as const, active: true },
     { name: 'Teacher User', email: 'teacher@eduvision.local', role: 'Teacher' as const, active: true },
@@ -22,8 +29,11 @@ const Settings: React.FC = () => {
       attendanceThreshold: localAttendance,
       performanceThreshold: localPerformance,
       notificationsEnabled: localNotifications,
-      theme: localTheme,
     })
+    // Apply theme change via ThemeContext
+    if (localTheme !== theme) {
+      setTheme(localTheme)
+    }
   }
 
   const handleReset = () => {
@@ -31,7 +41,7 @@ const Settings: React.FC = () => {
     setLocalAttendance(65)
     setLocalPerformance(65)
     setLocalNotifications(true)
-    setLocalTheme('light')
+    setTheme('light')
   }
 
   const toggleUserStatus = (index: number) => {
@@ -41,13 +51,13 @@ const Settings: React.FC = () => {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'Admin':
-        return 'bg-red-100 text-red-700'
+        return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
       case 'Teacher':
-        return 'bg-blue-100 text-blue-700'
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
       case 'Counselor':
-        return 'bg-green-100 text-green-700'
+        return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
       default:
-        return 'bg-neutral-100 text-neutral-700'
+        return 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300'
     }
   }
 
@@ -176,8 +186,8 @@ const Settings: React.FC = () => {
                       onClick={() => setLocalTheme('light')}
                       className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
                         localTheme === 'light'
-                          ? 'bg-blue-50 border-blue-500 text-blue-700'
-                          : 'border-neutral-300 text-neutral-600'
+                          ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-300'
+                          : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700/50'
                       }`}
                     >
                       Light
@@ -186,8 +196,8 @@ const Settings: React.FC = () => {
                       onClick={() => setLocalTheme('dark')}
                       className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
                         localTheme === 'dark'
-                          ? 'bg-blue-50 border-blue-500 text-blue-700'
-                          : 'border-neutral-300 text-neutral-600'
+                          ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-300'
+                          : 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700/50'
                       }`}
                     >
                       Dark
@@ -199,14 +209,14 @@ const Settings: React.FC = () => {
                 <div className="pt-5 flex gap-3">
                   <button
                     onClick={handleSave}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium text-sm rounded-lg transition-colors"
                   >
                     <Save className="w-4 h-4" />
                     Save
                   </button>
                   <button
                     onClick={handleReset}
-                    className="flex items-center gap-2 px-4 py-2 border border-neutral-300 hover:bg-neutral-50 text-neutral-600 font-medium text-sm rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 font-medium text-sm rounded-lg transition-colors"
                   >
                     <RotateCcw className="w-4 h-4" />
                     Reset to Defaults
@@ -279,8 +289,8 @@ const Settings: React.FC = () => {
                               onClick={() => toggleUserStatus(idx)}
                               className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
                                 user.active
-                                  ? 'bg-green-100 text-green-700'
-                                  : 'bg-neutral-100 text-neutral-600'
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                                  : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
                               }`}
                             >
                               {user.active ? 'Active' : 'Inactive'}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
@@ -22,6 +22,9 @@ import DataCenter from './pages/DataCenter'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 
+// Lazy-load landing page
+const Landing = lazy(() => import('./pages/Landing'))
+
 function App() {
   const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem("upswing_intro"));
 
@@ -44,10 +47,18 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
+            <Route 
+              path="/" 
+              element={
+                <Suspense fallback={<div className="min-h-screen bg-white dark:bg-neutral-900" />}>
+                  <Landing />
+                </Suspense>
+              } 
+            />
 
             {/* Protected Routes */}
             <Route
-              path="/"
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />

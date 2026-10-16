@@ -1,645 +1,454 @@
-# EDUVISION Implementation Plan
+# Implementation Plan: UPswing Landing Page
 
 ## Overview
+Build an interactive, animated landing page for UPswing at route `/`. This requires:
+1. Routing restructuring: move Dashboard from `/` to `/dashboard`
+2. New landing page files with 10 sections
+3. Custom hooks for animations and interactions
+4. Shared components for landing-specific features
+5. Risk calculator utility (if none exists)
 
-Comprehensive visual and functional upgrade of the EDUVISION Student Academic Performance Detection & Early Warning System. All changes preserve existing layout structure (sidebar, header, page structure, routes, data fetching, business logic). All data computed from `studentService.getStudents()` - never hardcoded.
+## Key Findings & Decisions
 
-**Stack:** React 18, TypeScript, Tailwind CSS, Vite
-**Dependencies already installed:** lucide-react, recharts, papaparse, zustand, react-hook-form, date-fns
+### Routing & Structure
+- **Current state**: Dashboard is at `/`, Login at `/login`, protected routes only
+- **Change needed**: Move Dashboard to `/dashboard`, add public Landing page at `/`
+- **ProtectedRoute redirect**: Update to redirect from `/` to `/dashboard` instead
+- **Intro animation**: Persists via sessionStorage, plays before landing page on first load—no changes needed
+- **Login exists**: Yes (`/login` page confirmed), so "Launch demo" CTA links to `/login`
+
+### Theme System
+- **Current**: ThemeContext with `data-theme` attribute and CSS variables (--primary, --bg, --surface, --border, --text, --text-muted, --primary-soft)
+- **Light mode**: Primary #2563eb, backgrounds light
+- **Dark mode**: Primary #3b82f6 (lighter blue), backgrounds dark (#0b1120, #111a2e, #172036)
+- **Landing page**: Will use existing theme system—no new tokens needed. CSS variables handle all colors.
+
+### Existing UI Components
+- **StatCard**: Count-up animation, icon, color prop, clickable links—reusable for hero stats
+- **RiskBadge**: Shows High/Medium/Low risk with colors
+- **ChartCard**: Card wrapper for charts with height prop—reusable
+- **Sidebar**: Links to `/`, needs updating to `/dashboard`
+- **Header**: Part of MainLayout, not used on landing (landing has custom LandingLayout)
+
+### Animation Library
+- **framer-motion**: NOT installed—cannot use
+- **lucide-react**: Already installed (used in Dashboard, Sidebar)
+- **recharts**: Already installed (used in Dashboard charts)
+- **Approach**: CSS animations + IntersectionObserver + requestAnimationFrame, no external libraries
+
+### Risk Calculator
+- **Current app**: Uses `studentService.getStats()` which returns StudentStats with risk counts
+- **No existing shared thresholds file**: Will create `src/utils/riskCalculator.ts` with thresholds:
+  - **High risk**: Attendance < 75% OR Performance < 50% OR Failed subjects ≥ 3
+  - **Medium risk**: Attendance < 85% OR Performance < 65% OR Failed subjects ≥ 2
+  - **Low risk**: Everything else
+  - **Trend**: Improving (avg up), Declining (avg down), Stable (flat)
+
+### Real Data for Hero Stats
+- Use `studentService.getStats()` in the Landing page or Hero component to fetch:
+  - Total students monitored
+  - High/Medium/Low risk counts
+  - Average attendance, Average performance
+- Display in hero preview card and trust strip
+
+### Component Organization
+- **Layout**: `src/pages/Landing/LandingLayout.tsx` (no sidebar, sticky nav, footer)
+- **Main page**: `src/pages/Landing/index.tsx` (SEO meta via useEffect + document.title)
+- **Sections**: Each in `src/pages/Landing/components/` for modularity
+- **Shared**: Hooks in `src/hooks/`, Reveal component in `src/components/common/`
+
+### CSS & Motion Constraints
+- **Prefers-reduced-motion**: Respected—all animations disabled, static final states shown
+- **Transforms & opacity only**: No layout thrash
+- **Durations**: 300–700ms for interactions, no loop longer than 1.2s except decorative
+- **Durations**: Parallax, tilt, cursor-glow loops pause when off-screen
+
+### Keyboard Accessibility
+- **Semantic HTML**: `<header>`, `<main>`, `<section>`, `<footer>`
+- **Focus rings**: Visible, consistent with app's focus-ring class
+- **ARIA labels**: On icons, accordions, sliders, modals
+- **Contrast**: WCAG AA in both themes (use existing CSS variable colors)
+- **Tab order**: Logical, skip to main content link
+- **Accordions & tabs**: Keyboard operable (arrow keys, Enter)
+
+### SEO & Meta Tags
+- **No react-helmet**: Not in package.json
+- **Approach**: Direct DOM manipulation in useEffect in `src/pages/Landing/index.tsx`
+- **Tags**:
+  - `<title>`: "UPswing | AI Student Academic Performance Detection & Early Warning System"
+  - `<meta name="description">`: "UPswing turns attendance and marks into early warnings. Detect academic risk early, understand why each student is at risk, and track interventions that bring them back up."
+  - **Open Graph**: og:title, og:description, og:type, og:url, og:image (CSS-generated or existing)
 
 ---
 
-## Phase 1: Global Styles & Foundation
+## Implementation Plan (Ordered by Dependency)
 
-### 1. Update tailwind.config.js - Inter font, animations, extended colors
+### Phase 1: Core Routing & Utilities
 
-**What:** Add Inter font family, skeleton shimmer animation, count-up animation, focus ring utilities, and extended color system with gradient support.
+- [ ] 1. Create risk calculator utility
+      **What**: Create `src/utils/riskCalculator.ts` with functions to classify risk level based on attendance, performance, failed subjects, and trend.
+      **Why**: Shared logic for both dashboard and landing risk checker. Thresholds: High (att<75% OR perf<50% OR fails≥3), Medium (att<85% OR perf<65% OR fails≥2), Low (else). Export a `calculateRiskLevel(attendance, performance, failedSubjects)` function and `RiskThresholds` interface.
+      **Files**: 
+        - Create: `src/utils/riskCalculator.ts`
+      **Verify**: 
+        ```
+        npm run type-check
+        ```
+        No TypeScript errors. Function exports visible in editor IntelliSense.
 
-**File:** `frontend/tailwind.config.js`
+- [ ] 2. Update routing: move Dashboard to `/dashboard`, add Landing placeholder
+      **What**: In `src/App.tsx`, (1) change Dashboard route from `/` to `/dashboard`, (2) add `<Route path="/" element={<Landing />} />` before protected routes with lazy-load placeholder, (3) update ProtectedRoute redirect to `/dashboard` instead of `/`.
+      **Why**: Makes landing page public, protects dashboard, maintains once-per-session intro animation.
+      **Files**: 
+        - Modify: `src/App.tsx`
+      **Verify**: 
+        ```
+        npm run type-check
+        ```
+        No errors. Routing structure validates.
 
-**Keep:** Existing risk and primary color definitions
+- [ ] 3. Update Sidebar to link Dashboard to `/dashboard` and update isActive check
+      **What**: In `src/components/common/Sidebar.tsx`, change the Dashboard nav item path from `/` to `/dashboard`, update `isActive` check to work with new route.
+      **Why**: Sidebar nav reflects new routing.
+      **Files**: 
+        - Modify: `src/components/common/Sidebar.tsx`
+      **Verify**: 
+        ```
+        npm run type-check
+        ```
+        No errors.
 
-**Add:**
-- `fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }`
-- Animation: `shimmer` (for skeleton loaders), `count-up`
-- Box shadow: `card` (subtle shadow for cards)
-- BorderRadius: `card` (12-16px)
+### Phase 2: Custom Hooks (Non-Visual)
 
-**Verify:** `cd frontend && npm run build` completes without errors
+- [ ] 4. Create custom hooks for animations and interactions
+      **What**: Create `src/hooks/` directory with 5 hooks:
+      - `useCountUp.ts`: Animate number from 0 to target over duration, respects prefers-reduced-motion
+      - `useReveal.ts`: IntersectionObserver wrapper; trigger callback when element enters viewport, only once
+      - `useScrollProgress.ts`: Returns 0–1 based on element scroll position relative to viewport
+      - `useTilt.ts`: 3D tilt effect following mouse/touch, respects prefers-reduced-motion
+      - `useMagnetic.ts`: Button that follows cursor with elastic animation, respects prefers-reduced-motion
+      
+      Each hook respects `prefers-reduced-motion` and uses only transforms/opacity.
+      **Files**: 
+        - Create: `src/hooks/useCountUp.ts`, `src/hooks/useReveal.ts`, `src/hooks/useScrollProgress.ts`, `src/hooks/useTilt.ts`, `src/hooks/useMagnetic.ts`
+      **Verify**: 
+        ```
+        npm run type-check
+        ```
+        No errors. All hooks export typed functions.
+
+### Phase 3: Shared Landing Components
+
+- [ ] 5. Create Reveal component for scroll-triggered animations
+      **What**: Create `src/components/common/Reveal.tsx`. Wraps children with IntersectionObserver trigger. Props: `children`, `variants` (fade-up, fade-in, scale-in, stagger-children), `delay`, `once` (default true). Animates on scroll into viewport.
+      **Why**: Reused across all landing sections for consistent reveal animations.
+      **Files**: 
+        - Create: `src/components/common/Reveal.tsx`
+      **Verify**: 
+        ```
+        npm run type-check
+        ```
+        No errors. Component accepts children and variant prop.
+
+- [ ] 6. Create shared UI components for landing (Button, Badge variants, Card styles)
+      **What**: In `src/components/common/`, create or extend:
+      - Ensure Button exists or create Button.tsx with variants: primary, outline, secondary. Props: size, disabled, className, children.
+      - Ensure Badge exists or create Badge.tsx with color/size variants
+      - Create LandingCard.tsx: wrapper with gradient border option, hover lift
+      
+      **Why**: Consistent UI across landing page, reuses app's design system.
+      **Files**: 
+        - Create or extend: `src/components/common/Button.tsx`, `src/components/common/Badge.tsx`, `src/components/common/LandingCard.tsx`
+      **Verify**: 
+        ```
+        npm run type-check
+        ```
+        No errors. Components render in isolation.
+
+### Phase 4: Landing Layout & Main Page
+
+- [ ] 7. Create LandingLayout component (no sidebar, sticky nav, footer)
+      **What**: Create `src/pages/Landing/LandingLayout.tsx`. Props: `children`, `navItems`, `onNavClick`. Returns:
+      - Sticky header with logo, wordmark, nav links, theme toggle, "Launch demo" button, mobile hamburger
+      - `<main>` with children
+      - Footer with logo, links, copyright
+      
+      Header becomes blur-translucent after 24px scroll. No sidebar or app layout.
+      **Files**: 
+        - Create: `src/pages/Landing/LandingLayout.tsx`
+      **Verify**: 
+        ```
+        npm run type-check
+        ```
+        No errors. Header and footer render.
+
+- [ ] 8. Create Hero component (headline, subtext, CTAs, interactive preview card)
+      **What**: Create `src/pages/Landing/components/Hero.tsx`. Sections:
+      - Headline: "Spot the dip. Fuel the upswing." with "upswing" in blue, underline animation
+      - Subtext: "UPswing turns attendance and marks into early warnings..."
+      - CTAs: "Launch demo" (primary) with magnetic hover, "See how it works" (outline)
+      - Right side: Mini dashboard preview card with 4 stat cards (real data from studentService), risk donut, trend line, floating badges, 3D tilt, cursor glow
+      - Background: Soft blue radial glow, SVG line animating upward curve (stroke-dashoffset), faint dotted grid parallax on scroll
+      - Below hero: Trust strip with 3 animated counters (students monitored, risk factors, interventions tracked) from real data
+      
+      **Files**: 
+        - Create: `src/pages/Landing/components/Hero.tsx`
+      **Verify**: 
+        ```
+        npm run dev
+        ```
+        Hero renders, headline visible, CTAs clickable, preview card tilts on mouse move, counters count up on scroll into view.
+
+- [ ] 9. Create Problem-to-Solution component (two-column, connecting line animates on scroll)
+      **What**: Create `src/pages/Landing/components/ProblemSolution.tsx`. Left column: "Students slip quietly." + 3 pain points (reveal staggered on scroll). Right column: "UPswing notices early." + 3 matching solutions. A connecting line between each pair animates (stroke-dashoffset) as user scrolls down.
+      **Files**: 
+        - Create: `src/pages/Landing/components/ProblemSolution.tsx`
+      **Verify**: 
+        ```
+        npm run dev
+        ```
+        Two columns render, line animates on scroll, pain points fade in one by one.
+
+- [ ] 10. Create Features bento grid (6 cards, asymmetric, cursor spotlight border, staggered reveal)
+      **What**: Create `src/pages/Landing/components/Features.tsx`. 6 feature cards in asymmetric bento grid (2 large, 4 small):
+      1. Early warning
+      2. Explainable risk scores
+      3. Intervention tracking
+      4. Reports and exports
+      5. Data Center import
+      6. Roles and privacy
+      
+      Each: lucide icon chip, one-line benefit, hover micro-animation (risk bars fill, gauge needle moves, CSV rows slide). Cursor spotlight border effect. Staggered reveal on scroll.
+      **Files**: 
+        - Create: `src/pages/Landing/components/Features.tsx`
+      **Verify**: 
+        ```
+        npm run dev
+        ```
+        6 cards render in asymmetric grid, spotlight effect on hover, icons animate.
+
+- [ ] 11. Create How It Works section (scroll-driven timeline with 4 steps, vertical progress line fills on scroll)
+      **What**: Create `src/pages/Landing/components/HowItWorks.tsx`. Four steps with vertical progress line that fills as user scrolls:
+      1. Import your data (CSV drop animation)
+      2. Detect risk (score gauge animates to value)
+      3. Understand why (top-3 factor bars, red for increasing/green for decreasing)
+      4. Intervene and track (small kanban cards moving Planned → In Progress → Completed)
+      
+      Visual side crossfades with active step. On mobile, stack steps vertically.
+      **Files**: 
+        - Create: `src/pages/Landing/components/HowItWorks.tsx`
+      **Verify**: 
+        ```
+        npm run dev
+        ```
+        4 steps render, progress line fills on scroll, mobile layout stacks.
+
+- [ ] 12. Create RiskChecker component (sliders for attendance/performance/failed subjects, trend selector, live risk score & factors)
+      **What**: Create `src/pages/Landing/components/RiskChecker.tsx`. Centerpiece card with:
+      - 3 sliders: Attendance (0–100%), Avg Performance (0–100%), Failed Subjects (0–6)
+      - Trend selector buttons: Improving / Stable / Declining
+      - Live updates: Risk badge (High/Medium/Low), risk score gauge (0–100), top 3 contributing factors as bars, suggested action text
+      - Uses `riskCalculator` utility with real app thresholds
+      - Buttons: "Reset", "Thriving", "Needs attention", "Critical" (presets)
+      - Note: "Demo using the same rules as the dashboard"
+      
+      **Files**: 
+        - Create: `src/pages/Landing/components/RiskChecker.tsx`
+      **Verify**: 
+        ```
+        npm run dev
+        ```
+        Sliders work, risk score updates live, presets populate sliders, gauge animates.
+
+- [ ] 13. Create RoleTabs component (Admin/Teacher/Counselor tabs, mock preview, role-specific bullet list)
+      **What**: Create `src/pages/Landing/components/RoleTabs.tsx`. Keyboard-accessible tab pattern:
+      - 3 tabs: Admin, Teacher, Counselor
+      - Switching tabs animates mock preview (different sidebar items & card sets)
+      - Shows role-specific feature list as bullets
+      - Arrow keys (left/right) switch tabs, Enter activates
+      **Files**: 
+        - Create: `src/pages/Landing/components/RoleTabs.tsx`
+      **Verify**: 
+        ```
+        npm run dev
+        ```
+        Tabs keyboard operable, preview animates on tab switch.
+
+- [ ] 14. Create BeforeAfter comparison slider (draggable, keyboard operable, shows risk curve before/after intervention)
+      **What**: Create `src/pages/Landing/components/BeforeAfter.tsx`. Draggable comparison slider showing student risk curve before/after intervention: left red falling line, right green swinging upward. Caption: "Interventions that work, measured." Label: "Illustrative". Keyboard operable: arrow keys move slider.
+      **Files**: 
+        - Create: `src/pages/Landing/components/BeforeAfter.tsx`
+      **Verify**: 
+        ```
+        npm run dev
+        ```
+        Slider drags smoothly, keyboard arrows work, curves render.
+
+- [ ] 15. Create FAQ component (4–5 accordion questions, smooth height animation, Reveal wrapper)
+      **What**: Create `src/pages/Landing/components/FAQ.tsx`. Accordion with questions:
+      1. How is risk calculated?
+      2. Is student data private?
+      3. Can I import my own CSV?
+      4. Do I need to install anything?
+      5. Can thresholds be changed?
+      
+      Each answer is accessible via keyboard (arrow keys, Enter to expand/collapse), smooth height transition.
+      **Files**: 
+        - Create: `src/pages/Landing/components/FAQ.tsx`
+      **Verify**: 
+        ```
+        npm run dev
+        ```
+        Accordion items expand/collapse smoothly, keyboard operable.
+
+- [ ] 16. Create FinalCTA component (animated "U" mark drawing itself, tagline, "Launch demo" button)
+      **What**: Create `src/pages/Landing/components/FinalCTA.tsx`. Full-width CTA band with:
+      - Animated UpswingMark drawing itself (reuse SVG from UpswingIntro)
+      - Line: "Ready to lift every student?"
+      - "Launch demo" primary button
+      - Reveal animation on scroll
+      **Files**: 
+        - Create: `src/pages/Landing/components/FinalCTA.tsx`
+      **Verify**: 
+        ```
+        npm run dev
+        ```
+        Mark draws on scroll into view, button clickable.
+
+- [ ] 17. Create Footer component (logo, description, link columns, copyright, theme toggle)
+      **What**: Create `src/pages/Landing/components/Footer.tsx`. Sticky footer with:
+      - Logo + "UPswing" wordmark
+      - Short description: "Early warning system for academic performance"
+      - 3 link columns: Product, Resources, Project
+      - "© 2026 UPswing"
+      - Theme toggle in footer
+      **Files**: 
+        - Create: `src/pages/Landing/components/Footer.tsx`
+      **Verify**: 
+        ```
+        npm run dev
+        ```
+        Footer renders, theme toggle works, links visually present.
+
+- [ ] 18. Create Landing page index (assemble all sections, manage SEO meta tags, Intro animation check)
+      **What**: Create `src/pages/Landing/index.tsx`. Main landing page component:
+      - Import all section components
+      - Wrap in LandingLayout
+      - Manage SEO: useEffect sets document.title, meta description, og tags
+      - Fetch real data from studentService for hero stats
+      - Fetch settings/thresholds for RiskChecker (or use defaults from riskCalculator)
+      - Wrap with React.lazy and Suspense in App.tsx
+      - Section order: Nav (in layout), Hero, ProblemSolution, Features, HowItWorks, RiskChecker, RoleTabs, BeforeAfter, FAQ, FinalCTA, Footer
+      
+      **Files**: 
+        - Create: `src/pages/Landing/index.tsx`
+      **Verify**: 
+        ```
+        npm run dev
+        ```
+        Landing page loads at `/`, all sections render, no console errors, SEO tags visible in HTML.
+
+### Phase 5: Integration & Final Routing
+
+- [ ] 19. Lazy-load Landing page in App.tsx with React.lazy and Suspense
+      **What**: In `src/App.tsx`, wrap Landing import with `React.lazy()`, use `<Suspense>` with loading fallback, route at `/`.
+      **Why**: Keeps main bundle small, landing loads on demand.
+      **Files**: 
+        - Modify: `src/App.tsx`
+      **Verify**: 
+        ```
+        npm run build
+        ```
+        Build succeeds, landing route loads with lazy loading fallback visible briefly.
+
+- [ ] 20. Test full routing flow: public landing → login → protected dashboard, redirects work
+      **What**: Test:
+      - Visit `/` → Landing page loads
+      - Click "Launch demo" → Redirect to `/login` (or login if not authenticated)
+      - Login → Redirect to `/dashboard` (not `/`)
+      - Try accessing `/` while authenticated → Landing page still loads (public)
+      - Try accessing `/dashboard` without auth → Redirect to `/login`
+      - Dashboard nav link goes to `/dashboard`
+      **Files**: (No file changes, testing only)
+      **Verify**: 
+        ```
+        npm run dev
+        ```
+        Open browser, test all routes above, no 404s, redirects work.
 
 ---
 
-### 2. Update index.css - Gradient background, transitions, focus rings
+## Notes on Implementation Order & Key Details
 
-**What:** Add soft gradient page background, smooth page transitions, visible focus rings, skeleton shimmer styles, and improved contrast.
+### Dependency Order Rationale
+1. **Risk calculator first**: Used by RiskChecker and potentially Dashboard (if we refactor it later)
+2. **Routing next**: Unblocks all landing pages
+3. **Hooks & shared components**: Foundation for all section components
+4. **Sections in build order**: Hero → simple static sections → interactive sections → Layout/main page
 
-**File:** `frontend/src/index.css`
+### Real Data Integration
+- **Hero stats & trust strip**: Call `studentService.getStats()` in Hero component
+- **RiskChecker**: Use `riskCalculator.calculateRiskLevel()` with real thresholds
+- **Settings/thresholds**: Landing page index fetches from `dashboardApi` or uses defaults from riskCalculator
 
-**Keep:** Existing Tailwind directives and scrollbar styles
+### Accessibility Checklist (Built Into Each Component)
+- [ ] Semantic HTML: header, main, section, footer, nav
+- [ ] ARIA labels on icons, accordions, sliders, buttons
+- [ ] Focus rings: Use `.focus-ring` class from tailwind config
+- [ ] Keyboard navigation: Tab order logical, accordions/tabs support arrow keys + Enter
+- [ ] Color contrast: Use CSS variables (--text, --primary, etc.) which maintain WCAG AA
+- [ ] prefers-reduced-motion: All hooks check `window.matchMedia('(prefers-reduced-motion: reduce)').matches`, disable animations if true
+- [ ] Mobile: Test at 375px and 768px breakpoints, hamburger nav drawer responsive
 
-**Add:**
-```css
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+### Animation Performance
+- Use `transform` and `opacity` only (no width, height, margin changes during animation)
+- `requestAnimationFrame` for smooth 60fps updates
+- Loops pause when off-screen (useReveal checks visibility)
+- Durations: 300–700ms typical, no loop > 1.2s except decorative background patterns
 
-/* Page background gradient */
-.page-bg { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); }
-
-/* Card styles */
-.card { @apply bg-white rounded-xl shadow-card border border-neutral-200/60; }
-
-/* Focus rings */
-.focus-ring { @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2; }
-
-/* Skeleton shimmer */
-.skeleton { @apply bg-neutral-200 animate-shimmer; }
-
-/* Page transition */
-.page-enter { animation: fadeSlideUp 200ms ease-out; }
-
-/* Hover transitions */
-.hover-lift { @apply transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-md; }
+### Build & Test Commands
+```bash
+npm run build          # Full build, check bundle size
+npm run dev            # Dev server, hot reload
+npm run type-check     # TypeScript check
+npm run lint           # ESLint check
+npm run format         # Prettier
 ```
 
-**Verify:** `cd frontend && npm run build` completes without errors
+### Dark Mode Testing
+- All sections must render in both light and dark modes
+- Use CSS variables and Tailwind's `dark:` prefix
+- Test with theme toggle in Header or Footer
 
 ---
 
-## Phase 2: Shared Components
+## Summary of Files to Create/Modify
 
-### 3. Create StatCard component
+### Create (28 files):
+- `src/utils/riskCalculator.ts`
+- `src/hooks/useCountUp.ts`, `useReveal.ts`, `useScrollProgress.ts`, `useTilt.ts`, `useMagnetic.ts`
+- `src/components/common/Reveal.tsx`, `Button.tsx` (or extend), `Badge.tsx` (or extend), `LandingCard.tsx`
+- `src/pages/Landing/index.tsx`
+- `src/pages/Landing/LandingLayout.tsx`
+- `src/pages/Landing/components/Hero.tsx`, `ProblemSolution.tsx`, `Features.tsx`, `HowItWorks.tsx`, `RiskChecker.tsx`, `RoleTabs.tsx`, `BeforeAfter.tsx`, `FAQ.tsx`, `FinalCTA.tsx`, `Footer.tsx`
 
-**What:** Modern stat card with gradient icon chip, count-up animation, trend caption, and hover lift effect.
-
-**File:** `frontend/src/components/common/StatCard.tsx`
-
-**Create new file with:**
-- Props: `title`, `value`, `icon` (Lucide component), `color` (blue/red/amber/green), `trend?`, `to?` (link)
-- Count-up animation using `useEffect` and `requestAnimationFrame`
-- Gradient icon chip: rounded-lg with gradient background and white icon
-- Hover lift effect
-- Small trend caption below number
-
-**Data source:** Values passed from parent (computed from `studentService.getStats()`)
-
-**Verify:** Import in Dashboard, verify TypeScript compiles
+### Modify (3 files):
+- `src/App.tsx` (routing, lazy loading)
+- `src/components/common/Sidebar.tsx` (Dashboard link to `/dashboard`)
 
 ---
 
-### 4. Create RiskBadge component
-
-**What:** Colored pill badge for risk levels with consistent styling.
-
-**File:** `frontend/src/components/common/RiskBadge.tsx`
-
-**Create new file with:**
-- Props: `level` ('High' | 'Medium' | 'Low')
-- Color mapping: High = red, Medium = amber, Low = green
-- Consistent pill styling: `px-2.5 py-1 rounded-full text-xs font-semibold`
-
-**Verify:** Import in StudentList, verify TypeScript compiles
-
----
-
-### 5. Create TrendIcon component
-
-**What:** Trend arrow with color coding.
-
-**File:** `frontend/src/components/common/TrendIcon.tsx`
-
-**Create new file with:**
-- Props: `trend` ('Improving' | 'Stable' | 'Declining')
-- Icons from lucide-react: TrendingUp (green), Minus (gray), TrendingDown (red)
-- Returns icon + label
-
-**Verify:** Import in StudentList, verify TypeScript compiles
-
----
-
-### 6. Create EmptyState component
-
-**What:** Friendly empty state with icon, message, and optional action.
-
-**File:** `frontend/src/components/common/EmptyState.tsx`
-
-**Create new file with:**
-- Props: `icon` (Lucide), `title`, `description?`, `action?` (React node)
-- Centered layout with muted colors
-
-**Verify:** TypeScript compiles
-
----
-
-### 7. Create Skeleton component
-
-**What:** Loading skeleton with shimmer animation.
-
-**File:** `frontend/src/components/common/Skeleton.tsx`
-
-**Create new file with:**
-- Props: `className?`, `variant?` ('text' | 'card' | 'circle')
-- Shimmer animation CSS class
-
-**Verify:** TypeScript compiles
-
----
-
-### 8. Create Drawer component
-
-**What:** Slide-in drawer for student detail view.
-
-**File:** `frontend/src/components/common/Drawer.tsx`
-
-**Create new file with:**
-- Props: `open`, `onClose`, `title`, `children`
-- Right-side slide-in animation
-- Close on Esc, close on backdrop click
-- Uses `@radix-ui/react-dialog` (already in devDependencies)
-
-**Verify:** TypeScript compiles
-
----
-
-### 9. Create ChartCard component
-
-**What:** Card wrapper for Recharts with title and loading state.
-
-**File:** `frontend/src/components/common/ChartCard.tsx`
-
-**Create new file with:**
-- Props: `title`, `children`, `loading?`
-- White card with rounded corners, subtle shadow
-- Skeleton when loading
-
-**Verify:** TypeScript compiles
-
----
-
-## Phase 3: Header & Sidebar Updates
-
-### 10. Update Header.tsx - Notification bell with dropdown
-
-**What:** Add real notification bell badge with unread count and dropdown preview of latest 5 notifications. Fix avatar dropdown to close on outside click and Esc.
-
-**File:** `frontend/src/components/common/Header.tsx`
-
-**Keep:** Existing logo block, user menu structure
-
-**Add:**
-- Import `useNotificationStore` from new store
-- Bell icon from lucide-react with unread count badge
-- Dropdown preview showing latest 5 notifications with unread dot
-- Use `useEffect` with click outside handler for dropdowns
-- Close avatar dropdown on Esc key
-
-**Data source:** `useNotificationStore().unreadCount`, `useNotificationStore().notifications.slice(0, 5)`
-
-**Verify:** `cd frontend && npm run build` compiles
-
----
-
-### 11. Update Sidebar.tsx - Lucide icons, hover states, active accent
-
-**What:** Replace emoji icons with Lucide icons, add soft hover state, left accent bar on active item, gradient logo block.
-
-**File:** `frontend/src/components/common/Sidebar.tsx`
-
-**Keep:** Existing navItems structure, mobile menu, footer
-
-**Changes:**
-- Replace emoji icons with Lucide: `LayoutDashboard`, `Users`, `AlertTriangle`, `Target`, `Bell`, `FileText`, `Database`, `Settings`
-- Add left accent bar on active item: `border-l-4 border-primary-500`
-- Add soft hover: `hover:bg-primary-50 dark:hover:bg-primary-900/20`
-- Add gradient to logo block: `bg-gradient-to-r from-primary-500 to-primary-600`
-
-**Verify:** `cd frontend && npm run build` compiles
-
----
-
-## Phase 4: Zustand Stores
-
-### 12. Create interventionsStore.ts
-
-**What:** Zustand store for interventions with localStorage persistence.
-
-**File:** `frontend/src/store/interventionsStore.ts`
-
-**Create new file with:**
-- Interface: `Intervention { id, studentId, type, notes, status, priority, assignedTo, dueDate, createdAt }`
-- State: `interventions`, `loading`
-- Actions: `addIntervention`, `updateIntervention`, `removeIntervention`, `getInterventionsByStudent`
-- Auto-generate initial interventions for High and Medium risk students
-
-**Data source:** `studentService.getStudents().filter(s => s.riskLevel === 'High' || s.riskLevel === 'Medium')`
-
-**Verify:** TypeScript compiles
-
----
-
-### 13. Create notificationsStore.ts
-
-**What:** Zustand store for notifications with localStorage persistence.
-
-**File:** `frontend/src/store/notificationsStore.ts`
-
-**Create new file with:**
-- Interface: `AppNotification { id, studentId, type, message, priority, read, createdAt }`
-- State: `notifications`, `unreadCount`
-- Actions: `markAsRead`, `markAllAsRead`, `addNotification`
-- Auto-generate notifications from student data on initialization
-
-**Data source:** Generate from High risk students, declining trends, attendance drops
-
-**Verify:** TypeScript compiles
-
----
-
-### 14. Create settingsStore.ts
-
-**What:** Zustand store for app settings with localStorage persistence.
-
-**File:** `frontend/src/store/settingsStore.ts`
-
-**Create new file with:**
-- Interface: `Settings { attendanceThreshold, performanceThreshold, notificationsEnabled, theme }`
-- State: `settings`
-- Actions: `updateSettings`, `resetToDefaults`
-
-**Verify:** TypeScript compiles
-
----
-
-## Phase 5: Dashboard Page
-
-### 15. Update Dashboard.tsx - Modern stat cards and charts
-
-**What:** Replace existing stat cards with new StatCard component (keeping 4 + 4 grid), add Recharts visualizations below existing content.
-
-**File:** `frontend/src/pages/Dashboard.tsx`
-
-**Keep:** 
-- Page title/subtitle structure
-- Existing 8 stat cards (replace with StatCard component)
-- Existing 3 action cards (QuickLink components)
-
-**Add below existing content:**
-
-**Row 1 - Two donut charts:**
-- Risk Distribution donut: High/Medium/Low counts
-- Performance Trend donut: Improving/Stable/Declining counts
-
-**Row 2 - Two charts:**
-- Average Performance by Department bar chart
-- Attendance vs Performance scatter plot (points colored by risk level)
-
-**Row 3 - Top 5 At-Risk Students table:**
-- Columns: Avatar initials, name, department, attendance, avg performance, risk badge, remarks (as reason)
-- Sorted by lowest attendance among High risk students
-
-**Row 4 - Needs Attention panel:**
-- Students with High risk AND Declining trend
-- Each with "Create intervention" button
-
-**Data source:** 
-- `studentService.getStats()` for counts
-- `studentService.getStudents()` for charts and tables
-- Computed: group by department, filter by risk/trend
-
-**Verify:** `cd frontend && npm run build` compiles, visual check in browser
-
----
-
-## Phase 6: Students Page
-
-### 16. Update StudentList.tsx - Modern table with filters
-
-**What:** Enhance table with avatar initials, colored attendance progress bar, trend arrows, search/filter/sort/pagination, and clickable row opening detail drawer.
-
-**File:** `frontend/src/pages/StudentList.tsx`
-
-**Keep:** Existing page structure, filter controls, pagination logic
-
-**Changes:**
-- Replace `riskBadge` and `trendIcon` functions with imported components
-- Add avatar initials column with colored background
-- Add small colored progress bar under attendance percentage
-- Add sortable column headers (Name, Attendance, Performance)
-- Make row clickable to open StudentDetailDrawer
-
-**Data source:** `studentService.filterStudents()` with existing filters
-
-**Verify:** `cd frontend && npm run build` compiles
-
----
-
-### 17. Create StudentDetailDrawer component
-
-**What:** Drawer showing student details with subject scores chart and "Why flagged" explanation.
-
-**File:** `frontend/src/components/student/StudentDetailDrawer.tsx`
-
-**Create new file with:**
-- Props: `studentId`, `open`, `onClose`
-- Profile info: name, roll number, department, year, section
-- Subject scores: Math, Programming, AI/ML as radar or bar chart (Recharts)
-- Attendance info: days present, absent, late count
-- Failed subjects count
-- "Why flagged" section: explanation based on thresholds (e.g., "Attendance 48%, below 65% threshold; 5 failed subjects; trend declining")
-
-**Data source:** `studentService.getStudentById(studentId)`
-
-**Verify:** TypeScript compiles
-
----
-
-### 18. Update StudentProfile.tsx - Full student profile
-
-**What:** Replace placeholder with real student profile using student data.
-
-**File:** `frontend/src/pages/StudentProfile.tsx`
-
-**Keep:** Existing page structure with MainLayout
-
-**Add:**
-- Load student via `studentService.getStudentById(studentId)`
-- Profile card with all student info
-- Subject scores chart (reuse from drawer)
-- Risk analysis section with factor breakdown
-- Intervention history
-
-**Data source:** `studentService.getStudentById(studentId)`
-
-**Verify:** `cd frontend && npm run build` compiles
-
----
-
-## Phase 7: Risk Analysis Page
-
-### 19. Create new RiskAnalysis page component
-
-**What:** Replace current RiskAnalysis.tsx with enhanced version including summary strip, 3-column layout, risk score gauges, and factor bars.
-
-**File:** `frontend/src/pages/RiskAnalysis.tsx`
-
-**Keep:** Page title/subtitle structure
-
-**Add:**
-- Summary strip at top: High/Medium/Low counts with percentages
-- Three columns listing students by risk level (High first), sorted by lowest attendance
-- Each student card shows:
-  - Risk score gauge (0-100) calculated from attendance, avg performance, failed subjects, trend
-  - Top 3 contributing factors as horizontal bars
-  - "Recommend action" line
-- Classification rules displayed: e.g., "High: attendance below 65% or avg below 65 or 3+ failed subjects"
-
-**Data source:** `studentService.getStudents()` grouped and sorted
-
-**Verify:** `cd frontend && npm run build` compiles
-
----
-
-### 20. Update App.tsx - Route to new RiskAnalysis
-
-**What:** Update /risk-analysis route to use the new RiskAnalysis component instead of Dashboard.
-
-**File:** `frontend/src/App.tsx`
-
-**Change:** Import RiskAnalysis and update the route element from `<Dashboard />` to `<RiskAnalysis />`
-
-**Verify:** `cd frontend && npm run build` compiles
-
----
-
-## Phase 8: Interventions Page
-
-### 21. Update Interventions.tsx - Full implementation
-
-**What:** Replace placeholder with full intervention management system.
-
-**File:** `frontend/src/pages/Interventions.tsx`
-
-**Keep:** Page title/subtitle structure
-
-**Add:**
-- Summary cards: Total, Planned, In Progress, Completed
-- Kanban or list view of interventions
-- Auto-generated starter interventions for High and Medium risk students
-- Each intervention shows: status, priority, assigned to, due date
-- "Create intervention" button opening form (student, type, notes, due date, priority)
-- Form saves to `useInterventionsStore`
-
-**Data source:** 
-- `useInterventionsStore().interventions`
-- Auto-generate from `studentService.getStudents().filter(s => s.riskLevel === 'High' || s.riskLevel === 'Medium')`
-
-**Verify:** `cd frontend && npm run build` compiles
-
----
-
-## Phase 9: Notifications Page
-
-### 22. Update Notifications.tsx - Full implementation
-
-**What:** Replace placeholder with full notification system with tabs and mark as read functionality.
-
-**File:** `frontend/src/pages/Notifications.tsx`
-
-**Keep:** Page title/subtitle structure
-
-**Add:**
-- Tabs: All, Unread, High Risk, Attendance, Interventions
-- Auto-generated notifications from student data
-- Each notification: icon (lucide), time ago, unread dot
-- "Mark as read" and "Mark all as read" buttons
-- Connected to header bell via `useNotificationStore`
-
-**Data source:** 
-- `useNotificationStore().notifications`
-- Filter by tab selection
-
-**Verify:** `cd frontend && npm run build` compiles
-
----
-
-## Phase 10: Reports Page
-
-### 23. Update Reports.tsx - Full implementation with CSV export
-
-**What:** Replace placeholder with report cards, live preview, and CSV export functionality.
-
-**File:** `frontend/src/pages/Reports.tsx`
-
-**Keep:** Page title/subtitle structure
-
-**Add:**
-- Report cards: Risk Summary, Attendance Report, Performance Report, Department-wise Report, Intervention Report
-- Each card: description, Download CSV button, Print button
-- Live preview section: table + chart for selected report
-- CSV export using native JavaScript (create downloadable blob)
-- Print-friendly view with `@media print` styles
-
-**Data source:** `studentService.getStudents()` for all reports
-
-**Verify:** `cd frontend && npm run build` compiles, CSV download works
-
----
-
-## Phase 11: Data Center Page
-
-### 24. Update DataCenter.tsx - CSV upload with PapaParse
-
-**What:** Replace placeholder with drag-and-drop CSV upload, preview, and data quality cards.
-
-**File:** `frontend/src/pages/DataCenter.tsx`
-
-**Keep:** Page title/subtitle structure
-
-**Add:**
-- Drag-and-drop CSV upload zone using PapaParse
-- File validation: required columns check, row count, error list
-- Preview table: first 10 rows before confirming import
-- "Replace data" and "Merge data" options
-- Data quality cards: total records, missing values, duplicate IDs, last updated
-- "Download sample CSV template" button
-- "Export current data" button
-
-**Data source:** 
-- `studentService.getStudents()` for current data
-- `studentService.setStudents()` for import
-- PapaParse for CSV parsing
-
-**Verify:** `cd frontend && npm run build` compiles, CSV import/export works
-
----
-
-## Phase 12: Settings Page
-
-### 25. Update Settings.tsx - Expanded settings with sliders
-
-**What:** Replace placeholder with real settings functionality.
-
-**File:** `frontend/src/pages/Settings.tsx`
-
-**Keep:** Two card layout structure (General Settings and User Management)
-
-**Add to General Settings:**
-- Risk thresholds: attendance and performance cutoffs with range sliders
-- Notification toggles: enable/disable notification types
-- Theme toggle: light/dark mode switch
-
-**Add to User Management:**
-- Table of demo users: Admin, Teacher, Counselor
-- Role badges
-- Active/inactive toggle switches
-
-**Make cards expandable** with "Expand" button opening into full panel on same page.
-
-**Data source:** 
-- `useSettingsStore()` for settings state
-- Demo users array (local)
-
-**Verify:** `cd frontend && npm run build` compiles, settings persist to localStorage
-
----
-
-## Phase 13: Final Verification
-
-### 26. Run full build and type check
-
-**What:** Ensure all changes compile and build successfully.
-
-**Command:** `cd frontend && npm run build && npm run type-check`
-
-**Verify:** No TypeScript errors, build completes successfully
-
----
-
-### 27. Run development server and verify UI
-
-**What:** Start dev server and visually verify all pages render correctly.
-
-**Command:** `cd frontend && npm run dev`
-
-**Verify:** 
-- All pages load without errors
-- Navigation works
-- Data displays correctly
-- Charts render
-- Responsive layout works
-
----
-
-## New Files Summary
-
-**Components (9 files):**
-- `frontend/src/components/common/StatCard.tsx`
-- `frontend/src/components/common/RiskBadge.tsx`
-- `frontend/src/components/common/TrendIcon.tsx`
-- `frontend/src/components/common/EmptyState.tsx`
-- `frontend/src/components/common/Skeleton.tsx`
-- `frontend/src/components/common/Drawer.tsx`
-- `frontend/src/components/common/ChartCard.tsx`
-- `frontend/src/components/student/StudentDetailDrawer.tsx`
-
-**Stores (3 files):**
-- `frontend/src/store/interventionsStore.ts`
-- `frontend/src/store/notificationsStore.ts`
-- `frontend/src/store/settingsStore.ts`
-
-## Modified Files Summary
-
-**Global Styles:**
-- `frontend/tailwind.config.js` - Add Inter font, animations
-- `frontend/src/index.css` - Add gradient backgrounds, transitions
-
-**Components:**
-- `frontend/src/components/common/Header.tsx` - Notification bell dropdown
-- `frontend/src/components/common/Sidebar.tsx` - Lucide icons, hover states
-
-**Pages:**
-- `frontend/src/pages/Dashboard.tsx` - Stat cards + Recharts
-- `frontend/src/pages/StudentList.tsx` - Modern table + drawer
-- `frontend/src/pages/StudentProfile.tsx` - Full profile
-- `frontend/src/pages/RiskAnalysis.tsx` - New implementation
-- `frontend/src/pages/Interventions.tsx` - Full implementation
-- `frontend/src/pages/Notifications.tsx` - Full implementation
-- `frontend/src/pages/Reports.tsx` - CSV export
-- `frontend/src/pages/DataCenter.tsx` - CSV upload
-- `frontend/src/pages/Settings.tsx` - Expanded settings
-
-**Routes:**
-- `frontend/src/App.tsx` - Update RiskAnalysis route
-
----
-
-## Dependencies
-
-All required dependencies are already installed in `package.json`:
-- `lucide-react` - Icons
-- `recharts` - Charts
-- `papaparse` - CSV parsing
-- `zustand` - State management
-- `react-hook-form` - Form handling
-- `date-fns` - Date formatting
-- `@radix-ui/react-dialog` - Drawer component
-
-No additional npm install required.
-
----
-
-## Implementation Order
-
-1. Global styles (tailwind.config.js, index.css)
-2. Shared components (StatCard, RiskBadge, TrendIcon, EmptyState, Skeleton, Drawer, ChartCard)
-3. Zustand stores (interventions, notifications, settings)
-4. Header and Sidebar updates
-5. Dashboard page
-6. Students page + StudentDetailDrawer + StudentProfile
-7. Risk Analysis page + App.tsx route update
-8. Interventions page
-9. Notifications page
-10. Reports page
-11. Data Center page
-12. Settings page
-13. Final verification
-
-Each step leaves the codebase in a buildable state.
+## Success Criteria
+1. Landing page loads at `/` without authentication
+2. Dashboard moved to `/dashboard`, accessible only when authenticated
+3. All 10 landing sections render and scroll smoothly
+4. Hero stats show real data from studentService
+5. RiskChecker calculates risk correctly using riskCalculator utility
+6. All animations respect `prefers-reduced-motion`
+7. Keyboard navigation works: tabs, accordions, sliders, links
+8. Light and dark themes both work without visual issues
+9. Mobile responsive at 375px and 768px
+10. Once-per-session intro animation plays before landing on first load
+11. "Launch demo" CTA links to `/login`
+12. No build errors, TypeScript strict mode, ESLint passing
+13. Lazy-loaded landing keeps main bundle small

@@ -35,6 +35,15 @@
   color-scheme: dark;
 }
 
+/* Apply color-scheme to html for native controls */
+html {
+  color-scheme: var(--bg);
+}
+
+html.dark, [data-theme="dark"] {
+  color-scheme: dark;
+}
+
 html {
   background-color: var(--bg);
 }
@@ -171,5 +180,33 @@ textarea {
   select,
   textarea {
     transition: none;
+  }
+}
+
+/* Print styles - force light theme for printing */
+@media print {
+  html, html.dark {
+    color-scheme: light !important;
+    background-color: #ffffff !important;
+  }
+  
+  body, .sidebar, .header, .card, main, nav, aside, section, div, table, thead, tbody, tr, td, th, p, span, h1, h2, h3, h4, h5, h6, li, a, input, select, textarea, button {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #e5e7eb !important;
+    box-shadow: none !important;
+  }
+  
+  .bg-white, .bg-neutral-800, .bg-neutral-900, .dark\:bg-neutral-800, .dark\:bg-neutral-900 {
+    background-color: #ffffff !important;
+  }
+  
+  .text-neutral-50, .text-neutral-100, .text-neutral-200, .text-white, .dark\:text-neutral-50, .dark\:text-neutral-100 {
+    color: #0f172a !important;
+  }
+  
+  /* Hide non-essential elements when printing */
+  nav.sidebar, button, .no-print {
+    display: none !important;
   }
 }
