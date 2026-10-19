@@ -65,3 +65,7 @@ htmlcov/
 # Misc
 *.pem
 *.key
+
+# Kiro project files
+kiro-project/
+.kiro/
