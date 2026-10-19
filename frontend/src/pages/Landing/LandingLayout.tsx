@@ -1,6 +1,5 @@
 import React from 'react'
 import LandingNav from './components/LandingNav'
-import Footer from './components/Footer'
 
 interface LandingLayoutProps {
   children: React.ReactNode

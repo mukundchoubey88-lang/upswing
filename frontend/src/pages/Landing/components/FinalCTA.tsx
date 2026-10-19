@@ -7,7 +7,7 @@ import { Reveal } from '../../../components/common/Reveal'
 
 const FinalCTA: React.FC = () => {
   const navigate = useNavigate()
-  const [ref, isVisible] = useReveal(0.3)
+  const [ref, isVisible] = useReveal<HTMLElement>(0.3)
   const { ref: buttonRef, style: magneticStyle, onMouseMove, onMouseLeave } = useMagnetic(0.3)
 
   return (

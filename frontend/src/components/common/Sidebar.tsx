@@ -121,6 +121,15 @@ const Sidebar: React.FC = () => {
               </Link>
             )
           })}
+          <div className="my-3 border-t border-neutral-200 dark:border-neutral-700" />
+          <Link
+            to="/"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 hover:text-neutral-900 dark:hover:text-neutral-200"
+          >
+            <span>📖</span>
+            <span className="flex-1">Home</span>
+          </Link>
         </nav>
 
         {/* Footer */}

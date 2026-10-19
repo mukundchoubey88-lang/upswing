@@ -18,11 +18,6 @@ export function useScrollProgress<T extends Element>(): [React.RefObject<T>, num
           // When element top is at viewport top, progress = 0
           // When element bottom is at viewport bottom, progress = 1
           const elementStart = top
-          const elementEnd = top + height
-
-          // Calculate how much of the element is visible
-          const visibleStart = Math.max(elementStart, 0)
-          const visibleEnd = Math.min(elementEnd, viewportHeight)
 
           // Progress from when element enters to when it leaves
           const totalTravel = height + viewportHeight

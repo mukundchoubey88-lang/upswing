@@ -22,8 +22,9 @@ import DataCenter from './pages/DataCenter'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 
-// Lazy-load landing page
+// Lazy-load landing page and layouts
 const Landing = lazy(() => import('./pages/Landing'))
+const LandingLayout = lazy(() => import('./pages/Landing/LandingLayout'))
 
 function App() {
   const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem("upswing_intro"));
@@ -44,104 +45,108 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <Router>
           <AuthProvider>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route 
-              path="/" 
-              element={
-                <Suspense fallback={<div className="min-h-screen bg-white dark:bg-neutral-900" />}>
-                  <Landing />
-                </Suspense>
-              } 
-            />
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<Login />} />
+              
+              {/* Landing Page - Public Homepage with Navigation */}
+              <Route 
+                path="/" 
+                element={
+                  <Suspense fallback={<div className="min-h-screen bg-white dark:bg-neutral-900" />}>
+                    <LandingLayout>
+                      <Landing />
+                    </LandingLayout>
+                  </Suspense>
+                } 
+              />
 
-            {/* Protected Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
+              {/* Protected Routes - App with Sidebar Navigation */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/students"
-              element={
-                <ProtectedRoute requiredRole="teacher">
-                  <StudentList />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/students"
+                element={
+                  <ProtectedRoute requiredRole="teacher">
+                    <StudentList />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/students/:studentId"
-              element={
-                <ProtectedRoute requiredRole="teacher">
-                  <StudentProfile />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/students/:studentId"
+                element={
+                  <ProtectedRoute requiredRole="teacher">
+                    <StudentProfile />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/risk-analysis"
-              element={
-                <ProtectedRoute requiredRole="teacher">
-                  <RiskAnalysis />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/risk-analysis"
+                element={
+                  <ProtectedRoute requiredRole="teacher">
+                    <RiskAnalysis />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/interventions"
-              element={
-                <ProtectedRoute requiredRole="teacher">
-                  <Interventions />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/interventions"
+                element={
+                  <ProtectedRoute requiredRole="teacher">
+                    <Interventions />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/notifications"
-              element={
-                <ProtectedRoute>
-                  <Notifications />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <Notifications />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRoute requiredRole="teacher">
-                  <Reports />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/reports"
+                element={
+                  <ProtectedRoute requiredRole="teacher">
+                    <Reports />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/data-center"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <DataCenter />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/data-center"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <DataCenter />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Error Routes */}
-            <Route path="/404" element={<NotFound />} />
-            <Route path="*" element={<Navigate to="/404" replace />} />
-          </Routes>
+              {/* Error Routes */}
+              <Route path="/404" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
+            </Routes>
           </AuthProvider>
         </Router>
         

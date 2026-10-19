@@ -1,0 +1,26 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "label": "Magnetic hook missing button ref types",
+      "description": "The useMagnetic hook in LandingNav.tsx is applied to a button but the type signature expects HTMLButtonElement. If used elsewhere on different element types, TS checking in strict mode might flag a type mismatch. Current usage is correct."
+    },
+    {
+      "label": "Sidebar logo links to dashboard instead of landing",
+      "description": "The sidebar logo (Link to='/dashboard') keeps users within the app. There is no way to return to the public landing page from within protected routes. This is likely intentional but worth noting if UX should allow navigation back to the homepage."
+    },
+    {
+      "label": "FAQ accordion state not persisted",
+      "description": "The FAQ component uses local state for openIndex but does not persist or restore focus after toggle. Users might lose context on large FAQ sections. Focus management is handled by aria-expanded, so this is a minor UX concern, not an accessibility issue."
+    },
+    {
+      "label": "HowItWorks progress calculation may stall at end",
+      "description": "The useScrollProgress hook leaves progress at 1.0 after the element scrolls completely out of view, keeping the final step highlighted indefinitely. This is a minor edge case and doesn't break functionality."
+    },
+    {
+      "label": "No test coverage for risk calculator edge cases",
+      "description": "The calculateRisk utility handles thresholds correctly but is not tested for boundary conditions (e.g., exactly 65 score, trend='stable' with mixed factors). No test files exist in the project structure. This is a testing gap, not a functional defect."
+    }
+  ],
+  "reviewDoc": "c:\\projettttttt22222\\.agents\\tasks\\landing-review.md"
+}

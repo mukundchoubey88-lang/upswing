@@ -10,7 +10,7 @@ import { Reveal } from '../../../components/common/Reveal'
 
 const Hero: React.FC = () => {
   const navigate = useNavigate()
-  const [ref, isVisible] = useReveal(0.3)
+  const [ref, isVisible] = useReveal<HTMLElement>(0.3)
   const { ref: tiltRef, style: tiltStyle, onMouseMove: onTiltMouseMove, onMouseLeave: onTiltMouseLeave } = useTilt(8)
   const { ref: magneticRef1, style: magneticStyle1, onMouseMove: onMag1Move, onMouseLeave: onMag1Leave } = useMagnetic(0.3)
   const { ref: magneticRef2, style: magneticStyle2, onMouseMove: onMag2Move, onMouseLeave: onMag2Leave } = useMagnetic(0.3)

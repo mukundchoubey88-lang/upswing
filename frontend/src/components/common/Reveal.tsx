@@ -13,10 +13,9 @@ export const Reveal: React.FC<RevealProps> = ({
   children,
   variant = 'fade-up',
   delay = 0,
-  once = true,
   className = '',
 }) => {
-  const [ref, isVisible] = useReveal(0.15)
+  const [ref, isVisible] = useReveal<HTMLDivElement>(0.15)
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   const getAnimationStyle = (): React.CSSProperties => {

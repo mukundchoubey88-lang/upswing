@@ -1,10 +1,10 @@
 import React from 'react'
-import { BarChart3, Database, Target, CheckCircle, AlertTriangle } from 'lucide-react'
+import { BarChart3, Database, Target, AlertTriangle } from 'lucide-react'
 import { useScrollProgress } from '../../../hooks/useScrollProgress'
 import { Reveal } from '../../../components/common/Reveal'
 
 const HowItWorks: React.FC = () => {
-  const [ref, progress] = useScrollProgress()
+  const [ref, progress] = useScrollProgress<HTMLElement>()
 
   const steps = [
     {

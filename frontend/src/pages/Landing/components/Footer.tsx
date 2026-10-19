@@ -1,5 +1,4 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
 import { Sun, Moon } from 'lucide-react'
 import { UpswingMark } from '../../../components/UpswingIntro'
 import UpswingWordmark from '../../../components/UpswingWordmark'
